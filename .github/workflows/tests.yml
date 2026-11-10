@@ -1,0 +1,27 @@
+# Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>
+# MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic).
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python: ["3.8", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: python -m pip install pytest jsonschema
+      - run: python -m pytest -q

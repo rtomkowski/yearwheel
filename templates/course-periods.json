@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "id": "course-periods",
+  "title": "Course periods",
+  "owner": "",
+  "template": "course-periods",
+  "yearStart": "2026-08-31",
+  "years": 1,
+  "settings": {
+    "language": "en",
+    "weekTicks": false,
+    "showPeriods": true,
+    "showQuarters": true,
+    "quarterStartMonth": 9,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "teaching",
+      "name": "Courses I teach",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "taking",
+      "name": "Courses I take",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "exams",
+      "name": "Exams",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "planning",
+      "name": "Course planning",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "teach-p1",
+      "ringId": "teaching",
+      "title": "Course A (teaching) (edit me)",
+      "kind": "span",
+      "start": "2026-08-31",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "teach-p3",
+      "ringId": "teaching",
+      "title": "Course B (teaching) (edit me)",
+      "kind": "span",
+      "start": "2027-01-18",
+      "end": "2027-03-19",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "take-p2",
+      "ringId": "taking",
+      "title": "Course C (studying) (edit me)",
+      "kind": "span",
+      "start": "2026-11-02",
+      "end": "2027-01-15",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "take-p4",
+      "ringId": "taking",
+      "title": "Course D (studying) (edit me)",
+      "kind": "span",
+      "start": "2027-03-22",
+      "end": "2027-06-04",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "exam-p1",
+      "ringId": "exams",
+      "title": "Exam week (edit me)",
+      "kind": "span",
+      "start": "2026-10-26",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "exam-p2",
+      "ringId": "exams",
+      "title": "Exam week (edit me)",
+      "kind": "span",
+      "start": "2027-01-11",
+      "end": "2027-01-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "exam-p3",
+      "ringId": "exams",
+      "title": "Exam week (edit me)",
+      "kind": "span",
+      "start": "2027-03-15",
+      "end": "2027-03-19",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "exam-p4",
+      "ringId": "exams",
+      "title": "Exam week (edit me)",
+      "kind": "span",
+      "start": "2027-05-31",
+      "end": "2027-06-04",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "reexam",
+      "ringId": "exams",
+      "title": "Re-exam period (edit me)",
+      "kind": "span",
+      "start": "2027-08-16",
+      "end": "2027-08-27",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "course-eval",
+      "ringId": "planning",
+      "title": "Course evaluation report (edit me)",
+      "kind": "milestone",
+      "start": "2026-11-20",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "syllabus",
+      "ringId": "planning",
+      "title": "Syllabus changes due (edit me)",
+      "kind": "milestone",
+      "start": "2027-02-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "schedule",
+      "ringId": "planning",
+      "title": "Schedule requests for next year (edit me)",
+      "kind": "milestone",
+      "start": "2027-04-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

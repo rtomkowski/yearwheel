@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "blank",
+  "title": "Mitt årshjul",
+  "owner": "",
+  "template": "blank",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "sv",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "research",
+      "name": "Forskning",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "education",
+      "name": "Utbildning",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "admin",
+      "name": "Administration",
+      "color": "#009E73",
+      "order": 2
+    }
+  ],
+  "events": [],
+  "reviews": [],
+  "changelog": []
+}

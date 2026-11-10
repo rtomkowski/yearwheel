@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# Release builds are attached to GitHub Releases, not committed
+dist/

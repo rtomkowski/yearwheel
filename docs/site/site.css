@@ -1,0 +1,92 @@
+/* Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>
+   MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic). */
+/* Shared styles for the website: landing page and online guide. No external resources. */
+:root {
+  --ink: #15202b; --muted: #55606c; --line: #e2e0d9; --paper: #f6f5f1; --card: #ffffff;
+  --navy: #102a43; --navy-2: #1b3a5c; --accent: #0b5cad; --blue: #0072B2; --orange: #E69F00;
+  --green: #009E73; --pink: #CC79A7; --sky: #56B4E9;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e8eaed; --muted: #a8b0ba; --line: #333a42; --paper: #14181d; --card: #1d2228;
+    --accent: #6aa9ec; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--font); }
+a { color: var(--accent); }
+img { max-width: 100%; height: auto; }
+
+/* Top bar shared by all pages */
+.topbar { position: sticky; top: 0; z-index: 10; background: var(--navy); color: #fff; }
+.topbar .in { max-width: 1120px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.topbar .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; letter-spacing: .02em; }
+.topbar nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.topbar nav a { color: #d6e4f2; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 15px; }
+.topbar nav a:hover, .topbar nav a[aria-current] { background: rgba(255,255,255,.12); color: #fff; }
+
+/* Landing page */
+.hero { background: var(--navy); color: #fff; padding: 56px 20px 0; overflow: hidden;
+  background-image: radial-gradient(circle at 85% 10%, rgba(86,180,233,.22), transparent 40%),
+                    radial-gradient(circle at 5% 90%, rgba(230,159,0,.16), transparent 36%); }
+.hero .in > *, .grid3 > *, .shots > *, .steps > *, .downloads > * { min-width: 0; }
+.hero .in { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+.hero h1 { overflow-wrap: anywhere; font-size: clamp(34px, 6vw, 64px); line-height: 1.02; letter-spacing: -.025em; margin: 0 0 18px; }
+.hero p.lede { font-size: 19px; color: #dbe7f3; margin: 0 0 26px; max-width: 34em; }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 650; text-decoration: none; font-size: 16px; }
+.btn.primary { background: #fff; color: var(--navy); }
+.btn.ghost { color: #fff; border: 1.5px solid rgba(255,255,255,.45); }
+.btn:hover { filter: brightness(1.06); }
+.hero .small { font-size: 14px; color: #a9c2da; }
+.hero .shot { background: #fff; border-radius: 18px 18px 0 0; padding: 10px 10px 0; box-shadow: 0 -10px 50px rgba(0,0,0,.25); align-self: end; }
+.hero .shot img { display: block; border-radius: 10px 10px 0 0; }
+
+section.block { max-width: 1120px; margin: 0 auto; padding: 64px 20px; }
+section.block h2 { font-size: 30px; letter-spacing: -.01em; margin: 0 0 8px; }
+section.block > p.sub { color: var(--muted); margin: 0 0 30px; max-width: 46em; font-size: 17px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.feature { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; border-top: 4px solid var(--c, var(--blue)); }
+.feature h3 { margin: 0 0 6px; font-size: 18px; }
+.feature p { margin: 0; color: var(--muted); font-size: 15px; }
+.shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+.shots figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.shots figcaption { padding: 10px 14px; font-size: 14px; color: var(--muted); }
+.steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 0; list-style: none; }
+.steps li { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; font-size: 15px; }
+.steps li::before { counter-increment: s; content: counter(s); display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; align-items: center; justify-content: center; margin-bottom: 8px; }
+.steps b { display: block; font-size: 16px; margin-bottom: 2px; }
+.band { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.downloads a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; text-decoration: none; color: var(--ink); }
+.downloads a:hover { border-color: var(--accent); }
+.downloads b { display: block; color: var(--accent); }
+.downloads span { font-size: 14px; color: var(--muted); }
+.privacy { display: flex; gap: 18px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+footer { max-width: 1120px; margin: 0 auto; padding: 30px 20px 50px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+
+@media (max-width: 860px) {
+  .hero .in { grid-template-columns: 1fr; }
+  .grid3, .shots, .downloads { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+
+/* Online guide (pandoc output) */
+.guide { max-width: 820px; margin: 0 auto; padding: 36px 20px 60px; }
+.guide h1 { font-size: 40px; letter-spacing: -.02em; line-height: 1.1; margin: 0 0 10px; }
+.guide h2 { font-size: 26px; margin: 46px 0 10px; padding-top: 14px; border-top: 3px solid var(--blue); scroll-margin-top: 70px; }
+.guide h3 { font-size: 19px; margin: 28px 0 8px; scroll-margin-top: 70px; }
+.guide figure { margin: 18px 0 24px; }
+.guide figure img, .guide p > img { border: 1px solid var(--line); border-radius: 10px; display: block; }
+.guide figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.guide table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 15px; display: block; overflow-x: auto; }
+.guide th, .guide td { border-bottom: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+.guide th { background: var(--card); }
+.guide code { font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--card); border: 1px solid var(--line); padding: 0 4px; border-radius: 4px; }
+.guide pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+.guide pre code { border: 0; padding: 0; background: none; }
+.guide .getpdf { display: inline-block; margin: 4px 0 10px; font-size: 15px; }

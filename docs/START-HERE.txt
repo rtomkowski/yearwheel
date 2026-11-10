@@ -1,0 +1,18 @@
+YEAR WHEEL - START HERE
+
+1. Unzip this folder somewhere you can find it again.
+2. Open yearwheel.html in Google Chrome or Microsoft Edge
+   (right-click > Open With > Google Chrome). Safari and Firefox also work,
+   but save changes as new copies in your Downloads folder.
+3. Click "Open" and choose demo-department-2026-27.json to see a demo wheel
+   (all events are fictional), or click "New" to start your own from a template.
+4. Click "Save" to keep your wheel as a .json file. That file is your wheel.
+5. To add many events from a spreadsheet, start from
+   year-wheel-import-template.csv and use Import > Spreadsheet (.csv).
+
+Nothing is installed and nothing is sent over the internet.
+The full guide is in Year-Wheel-User-Guide.pdf.
+
+Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>
+Released under the MIT License: free to use, copy, change and share, provided as is
+without warranty (full text in LICENSE). Developed with the assistance of Claude Code.

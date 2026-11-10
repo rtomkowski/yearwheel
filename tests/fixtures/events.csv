@@ -1,0 +1,6 @@
+title;start;end;ring;status
+Budget draft;2027-02-01;2027-03-15;Admin;planned
+"Board meeting; spring";2027-04-12;;admin;
+Calibration of CMM;2027-05-03;;Lab;done
+Bad date row;2027-13-40;;Admin;planned
+Unknown status;2027-06-01;;Admin;someday

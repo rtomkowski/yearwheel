@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "id": "research-team",
+  "title": "Research team year wheel",
+  "owner": "",
+  "template": "research-team",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "en",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "projects",
+      "name": "Projects",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "funding",
+      "name": "Funding calls",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "dissemination",
+      "name": "Conferences and papers",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "team",
+      "name": "Team",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "proj-a-wp2",
+      "ringId": "projects",
+      "title": "Project A, work package 2 (edit me)",
+      "kind": "span",
+      "start": "2027-02-01",
+      "end": "2027-06-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-a-deliv",
+      "ringId": "projects",
+      "title": "Project A deliverable D2.1 (edit me)",
+      "kind": "milestone",
+      "start": "2027-06-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-b-campaign",
+      "ringId": "projects",
+      "title": "Project B measurement campaign (edit me)",
+      "kind": "span",
+      "start": "2027-09-06",
+      "end": "2027-11-26",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-b-report",
+      "ringId": "projects",
+      "title": "Project B annual report (edit me)",
+      "kind": "milestone",
+      "start": "2027-12-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "call-national",
+      "ringId": "funding",
+      "title": "National research council call (edit me)",
+      "kind": "milestone",
+      "start": "2027-03-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "call-eu",
+      "ringId": "funding",
+      "title": "EU call deadline (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "call-prep",
+      "ringId": "funding",
+      "title": "Proposal writing (edit me)",
+      "kind": "span",
+      "start": "2027-08-16",
+      "end": "2027-09-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "conf-abstract",
+      "ringId": "dissemination",
+      "title": "Conference abstract deadline (edit me)",
+      "kind": "milestone",
+      "start": "2027-01-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "conf-main",
+      "ringId": "dissemination",
+      "title": "Main conference (edit me)",
+      "kind": "span",
+      "start": "2027-06-07",
+      "end": "2027-06-11",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "paper-submit",
+      "ringId": "dissemination",
+      "title": "Journal paper submission (edit me)",
+      "kind": "milestone",
+      "start": "2027-04-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "team-summer",
+      "ringId": "team",
+      "title": "Summer break (edit me)",
+      "kind": "span",
+      "start": "2027-07-01",
+      "end": "2027-08-06",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "team-kickoff",
+      "ringId": "team",
+      "title": "Group kick-off day (edit me)",
+      "kind": "milestone",
+      "start": "2027-08-23",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "team-dev-talks",
+      "ringId": "team",
+      "title": "Development talks (edit me)",
+      "kind": "milestone",
+      "start": "2027-11-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

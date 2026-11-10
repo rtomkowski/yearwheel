@@ -1,0 +1,516 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-department-2026-27",
+  "title": "Demo department 2026/27",
+  "owner": "Demo department (fictional)",
+  "yearStart": "2026-08-31",
+  "years": 1,
+  "settings": {
+    "language": "en",
+    "weekTicks": true,
+    "showPeriods": true,
+    "showQuarters": true,
+    "quarterStartMonth": 9,
+    "timeZone": "Europe/Stockholm",
+    "ringOpacity": 0.15,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30"
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15"
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19"
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04"
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "research",
+      "name": "Research",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "admin",
+      "name": "Department",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "lab",
+      "name": "Lab",
+      "color": "#CC79A7",
+      "order": 3
+    },
+    {
+      "id": "breaks",
+      "name": "Breaks",
+      "color": "#56B4E9",
+      "order": 4
+    }
+  ],
+  "events": [
+    {
+      "id": "alpha-campaign",
+      "ringId": "research",
+      "title": "Project ALPHA measurement campaign",
+      "kind": "span",
+      "start": "2026-09-14",
+      "end": "2026-11-27",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Project leader",
+      "notes": "Fictional project used for the demo."
+    },
+    {
+      "id": "alpha-d32",
+      "ringId": "research",
+      "title": "ALPHA deliverable D3.2",
+      "kind": "milestone",
+      "start": "2026-12-15",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Project leader"
+    },
+    {
+      "id": "paper-submitted",
+      "ringId": "research",
+      "title": "Journal paper submitted",
+      "kind": "milestone",
+      "start": "2026-10-30",
+      "status": "done",
+      "recurrence": "none",
+      "owner": "PhD student 1"
+    },
+    {
+      "id": "eu-proposal",
+      "ringId": "research",
+      "title": "Proposal writing, EU call",
+      "kind": "span",
+      "start": "2027-01-11",
+      "end": "2027-02-19",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Research group"
+    },
+    {
+      "id": "eu-deadline",
+      "ringId": "research",
+      "title": "EU call deadline",
+      "kind": "milestone",
+      "start": "2027-02-24",
+      "status": "moved",
+      "recurrence": "none",
+      "notes": "The funder extended the deadline by one week.",
+      "prevStart": "2027-02-17"
+    },
+    {
+      "id": "council-call",
+      "ringId": "research",
+      "title": "Research council call deadline",
+      "kind": "milestone",
+      "start": "2027-03-16",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "writing-retreat",
+      "ringId": "research",
+      "title": "Writing retreat",
+      "kind": "span",
+      "start": "2027-04-12",
+      "end": "2027-04-14",
+      "startTime": "12:00",
+      "endTime": "12:00",
+      "timing": "continuous",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Lunch to lunch, off site."
+    },
+    {
+      "id": "conference",
+      "ringId": "research",
+      "title": "International conference",
+      "kind": "span",
+      "start": "2027-06-07",
+      "end": "2027-06-10",
+      "startTime": "09:00",
+      "endTime": "17:30",
+      "timing": "daily",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "mg101",
+      "ringId": "education",
+      "title": "Course MG101 Metrology basics",
+      "kind": "span",
+      "start": "2026-08-31",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "yearly",
+      "owner": "Course coordinator"
+    },
+    {
+      "id": "exam-p1",
+      "ringId": "education",
+      "title": "Exam week P1",
+      "kind": "span",
+      "start": "2026-10-26",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "course-eval",
+      "ringId": "education",
+      "title": "Course evaluation report",
+      "kind": "milestone",
+      "start": "2026-11-20",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Course coordinator"
+    },
+    {
+      "id": "project-presentations",
+      "ringId": "education",
+      "title": "Student project presentations",
+      "kind": "milestone",
+      "start": "2026-12-10",
+      "startTime": "13:00",
+      "endTime": "17:00",
+      "status": "planned",
+      "recurrence": "none"
+    },
+    {
+      "id": "exam-p2",
+      "ringId": "education",
+      "title": "Exam week P2",
+      "kind": "span",
+      "start": "2027-01-11",
+      "end": "2027-01-15",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "mg205",
+      "ringId": "education",
+      "title": "Course MG205 Surface analysis",
+      "kind": "span",
+      "start": "2027-01-18",
+      "end": "2027-03-19",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Course coordinator"
+    },
+    {
+      "id": "syllabus",
+      "ringId": "education",
+      "title": "Syllabus changes due",
+      "kind": "milestone",
+      "start": "2027-02-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "owner": "Director of studies"
+    },
+    {
+      "id": "reexam",
+      "ringId": "education",
+      "title": "Re-exam period",
+      "kind": "span",
+      "start": "2027-08-16",
+      "end": "2027-08-27",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "board-sep",
+      "ringId": "admin",
+      "title": "Department board meeting",
+      "kind": "milestone",
+      "start": "2026-09-16",
+      "startTime": "13:15",
+      "endTime": "15:00",
+      "status": "done",
+      "recurrence": "none"
+    },
+    {
+      "id": "dept-day",
+      "ringId": "admin",
+      "title": "Department day",
+      "kind": "milestone",
+      "start": "2026-09-24",
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "status": "done",
+      "recurrence": "none",
+      "owner": "Head of department"
+    },
+    {
+      "id": "budget-decision",
+      "ringId": "admin",
+      "title": "Budget decision",
+      "kind": "milestone",
+      "start": "2026-11-25",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Head of department"
+    },
+    {
+      "id": "board-dec",
+      "ringId": "admin",
+      "title": "Department board meeting",
+      "kind": "milestone",
+      "start": "2026-12-02",
+      "startTime": "13:15",
+      "endTime": "15:00",
+      "status": "moved",
+      "recurrence": "none",
+      "notes": "Moved to the afternoon slot."
+    },
+    {
+      "id": "christmas-lunch",
+      "ringId": "admin",
+      "title": "Christmas lunch",
+      "kind": "milestone",
+      "start": "2026-12-17",
+      "startTime": "11:30",
+      "endTime": "14:00",
+      "status": "cancelled",
+      "recurrence": "none"
+    },
+    {
+      "id": "board-feb",
+      "ringId": "admin",
+      "title": "Department board meeting",
+      "kind": "milestone",
+      "start": "2027-02-17",
+      "startTime": "13:15",
+      "endTime": "15:00",
+      "status": "planned",
+      "recurrence": "none"
+    },
+    {
+      "id": "annual-report",
+      "ringId": "admin",
+      "title": "Annual report due",
+      "kind": "milestone",
+      "start": "2027-02-26",
+      "status": "planned",
+      "recurrence": "yearly",
+      "owner": "Administrator"
+    },
+    {
+      "id": "appraisals",
+      "ringId": "admin",
+      "title": "Performance reviews",
+      "kind": "span",
+      "start": "2027-03-01",
+      "end": "2027-04-16",
+      "status": "planned",
+      "recurrence": "yearly",
+      "owner": "Head of department"
+    },
+    {
+      "id": "budget-draft",
+      "ringId": "admin",
+      "title": "Budget draft for next year",
+      "kind": "span",
+      "start": "2027-05-03",
+      "end": "2027-06-11",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "board-may",
+      "ringId": "admin",
+      "title": "Department board meeting",
+      "kind": "milestone",
+      "start": "2027-05-19",
+      "startTime": "13:15",
+      "endTime": "15:00",
+      "status": "planned",
+      "recurrence": "none"
+    },
+    {
+      "id": "safety-training",
+      "ringId": "lab",
+      "title": "Safety training for new users",
+      "kind": "milestone",
+      "start": "2026-09-03",
+      "startTime": "09:00",
+      "endTime": "12:00",
+      "status": "done",
+      "recurrence": "yearly",
+      "owner": "Lab manager"
+    },
+    {
+      "id": "cmm-cal",
+      "ringId": "lab",
+      "title": "CMM calibration",
+      "kind": "milestone",
+      "start": "2026-10-05",
+      "status": "done",
+      "recurrence": "yearly",
+      "owner": "Lab manager"
+    },
+    {
+      "id": "cmm-service",
+      "ringId": "lab",
+      "title": "CMM vendor service visit",
+      "kind": "span",
+      "start": "2027-02-08",
+      "end": "2027-02-10",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "timing": "daily",
+      "status": "planned",
+      "recurrence": "none",
+      "owner": "Lab manager"
+    },
+    {
+      "id": "safety-inspection",
+      "ringId": "lab",
+      "title": "Lab safety inspection",
+      "kind": "milestone",
+      "start": "2027-03-22",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "interferometer-cal",
+      "ringId": "lab",
+      "title": "Interferometer calibration",
+      "kind": "milestone",
+      "start": "2027-04-12",
+      "status": "planned",
+      "recurrence": "yearly",
+      "owner": "Lab manager"
+    },
+    {
+      "id": "maintenance",
+      "ringId": "lab",
+      "title": "Preventive maintenance, all instruments",
+      "kind": "span",
+      "start": "2027-07-05",
+      "end": "2027-07-23",
+      "status": "planned",
+      "recurrence": "yearly"
+    },
+    {
+      "id": "autumn-break",
+      "ringId": "breaks",
+      "title": "Autumn break",
+      "kind": "span",
+      "start": "2026-10-26",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "none"
+    },
+    {
+      "id": "christmas-break",
+      "ringId": "breaks",
+      "title": "Christmas break",
+      "kind": "span",
+      "start": "2026-12-23",
+      "end": "2027-01-06",
+      "status": "planned",
+      "recurrence": "none"
+    },
+    {
+      "id": "summer-break",
+      "ringId": "breaks",
+      "title": "Summer break",
+      "kind": "span",
+      "start": "2027-07-01",
+      "end": "2027-08-06",
+      "status": "planned",
+      "recurrence": "none"
+    }
+  ],
+  "reviews": [],
+  "changelog": [
+    {
+      "timestamp": "2026-09-16T15:10:00Z",
+      "eventId": "board-sep",
+      "title": "Department board meeting",
+      "action": "edited"
+    },
+    {
+      "timestamp": "2026-10-12T08:30:00Z",
+      "eventId": "eu-deadline",
+      "title": "EU call deadline",
+      "action": "moved",
+      "before": {
+        "start": "2027-02-17"
+      },
+      "after": {
+        "start": "2027-02-24"
+      },
+      "reason": "The funder extended the call deadline by one week."
+    },
+    {
+      "timestamp": "2026-10-20T10:05:00Z",
+      "eventId": "board-dec",
+      "title": "Department board meeting",
+      "action": "moved",
+      "before": {
+        "start": "2026-12-02",
+        "startTime": "09:15",
+        "endTime": "11:00"
+      },
+      "after": {
+        "start": "2026-12-02",
+        "startTime": "13:15",
+        "endTime": "15:00"
+      },
+      "reason": "Morning clashes with the exam period; moved to the afternoon slot."
+    },
+    {
+      "timestamp": "2026-10-28T14:00:00Z",
+      "eventId": "christmas-lunch",
+      "title": "Christmas lunch",
+      "action": "cancelled",
+      "before": {
+        "start": "2026-12-17",
+        "startTime": "11:30",
+        "endTime": "14:00"
+      },
+      "after": {
+        "start": "2026-12-17",
+        "startTime": "11:30",
+        "endTime": "14:00"
+      },
+      "reason": "Combined with the spring department day instead."
+    },
+    {
+      "timestamp": "2026-10-30T16:20:00Z",
+      "eventId": "paper-submitted",
+      "title": "Journal paper submitted",
+      "action": "edited"
+    }
+  ]
+}

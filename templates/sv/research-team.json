@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "id": "research-team",
+  "title": "Forskargruppens årshjul",
+  "owner": "",
+  "template": "research-team",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "sv",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "projects",
+      "name": "Projekt",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "funding",
+      "name": "Utlysningar",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "dissemination",
+      "name": "Konferenser och artiklar",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "team",
+      "name": "Gruppen",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "proj-a-wp2",
+      "ringId": "projects",
+      "title": "Projekt A, arbetspaket 2 (ändra mig)",
+      "kind": "span",
+      "start": "2027-02-01",
+      "end": "2027-06-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-a-deliv",
+      "ringId": "projects",
+      "title": "Projekt A, leverans D2.1 (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-06-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-b-campaign",
+      "ringId": "projects",
+      "title": "Projekt B, mätkampanj (ändra mig)",
+      "kind": "span",
+      "start": "2027-09-06",
+      "end": "2027-11-26",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "proj-b-report",
+      "ringId": "projects",
+      "title": "Projekt B, årsrapport (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-12-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "call-national",
+      "ringId": "funding",
+      "title": "Utlysning från nationellt forskningsråd (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-03-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "call-eu",
+      "ringId": "funding",
+      "title": "Sista dag för EU-utlysning (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "call-prep",
+      "ringId": "funding",
+      "title": "Ansökningsskrivande (ändra mig)",
+      "kind": "span",
+      "start": "2027-08-16",
+      "end": "2027-09-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "conf-abstract",
+      "ringId": "dissemination",
+      "title": "Sista dag för konferensabstrakt (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-01-20",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "conf-main",
+      "ringId": "dissemination",
+      "title": "Huvudkonferens (ändra mig)",
+      "kind": "span",
+      "start": "2027-06-07",
+      "end": "2027-06-11",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "paper-submit",
+      "ringId": "dissemination",
+      "title": "Tidskriftsartikel inskickad (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-04-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "team-summer",
+      "ringId": "team",
+      "title": "Sommaruppehåll (ändra mig)",
+      "kind": "span",
+      "start": "2027-07-01",
+      "end": "2027-08-06",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "team-kickoff",
+      "ringId": "team",
+      "title": "Gruppens uppstartsdag (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-08-23",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "team-dev-talks",
+      "ringId": "team",
+      "title": "Utvecklingssamtal (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-11-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

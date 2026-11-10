@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "id": "lab-maintenance",
+  "title": "Labbunderhåll och kalibrering",
+  "owner": "",
+  "template": "lab-maintenance",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "sv",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "calibration",
+      "name": "Kalibrering",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "maintenance",
+      "name": "Underhåll",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "service",
+      "name": "Servicebesök",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "safety",
+      "name": "Säkerhet",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "cal-cmm",
+      "ringId": "calibration",
+      "title": "Kalibrering av koordinatmätmaskin (CMM) (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-02-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-interferometer",
+      "ringId": "calibration",
+      "title": "Kalibrering av interferometer (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-04-12",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-roughness-1",
+      "ringId": "calibration",
+      "title": "Kontroll av ytjämnhetsnormal (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-03-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-roughness-2",
+      "ringId": "calibration",
+      "title": "Kontroll av ytjämnhetsnormal (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-06",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-gauge-blocks",
+      "ringId": "calibration",
+      "title": "Verifiering av passbitar (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-10-18",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-summer",
+      "ringId": "maintenance",
+      "title": "Förebyggande underhåll, alla instrument (ändra mig)",
+      "kind": "span",
+      "start": "2027-07-05",
+      "end": "2027-07-23",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-winter",
+      "ringId": "maintenance",
+      "title": "Förebyggande underhåll, alla instrument (ändra mig)",
+      "kind": "span",
+      "start": "2027-12-13",
+      "end": "2027-12-22",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-filters",
+      "ringId": "maintenance",
+      "title": "Kontroll av luftfilter och klimat (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-05-17",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "svc-cmm",
+      "ringId": "service",
+      "title": "Servicebesök från CMM-leverantören (ändra mig)",
+      "kind": "span",
+      "start": "2027-02-08",
+      "end": "2027-02-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "svc-microscope",
+      "ringId": "service",
+      "title": "Service av optisk profilometer (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-11-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-inspection",
+      "ringId": "safety",
+      "title": "Säkerhetsrond i labbet (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-03-22",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-chemicals",
+      "ringId": "safety",
+      "title": "Kemikalieinventering (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-27",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-training",
+      "ringId": "safety",
+      "title": "Säkerhetsutbildning för nya användare (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-02",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

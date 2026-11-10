@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "id": "phd-journey",
+  "title": "Doktorandresan",
+  "owner": "",
+  "template": "phd-journey",
+  "yearStart": "2026-08-31",
+  "years": 4,
+  "settings": {
+    "language": "sv",
+    "weekTicks": false,
+    "showPeriods": true,
+    "showQuarters": true,
+    "quarterStartMonth": 9,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "milestones",
+      "name": "Milstolpar",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "courses",
+      "name": "Kurser",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "papers",
+      "name": "Artiklar och konferenser",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "teaching",
+      "name": "Undervisning",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "phd-start",
+      "ringId": "milestones",
+      "title": "Start av forskarutbildningen (ändra mig)",
+      "kind": "milestone",
+      "start": "2026-09-01",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "isp-update",
+      "ringId": "milestones",
+      "title": "Uppdatering av individuell studieplan (ISP) (ändra mig)",
+      "kind": "milestone",
+      "start": "2026-11-16",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "isp-first",
+      "ringId": "milestones",
+      "title": "Första ISP fastställd (ändra mig)",
+      "kind": "milestone",
+      "start": "2026-12-14",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "lic-seminar",
+      "ringId": "milestones",
+      "title": "Licentiatseminarium (om aktuellt) (ändra mig)",
+      "kind": "milestone",
+      "start": "2028-12-08",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "final-seminar",
+      "ringId": "milestones",
+      "title": "Slutseminarium (ändra mig)",
+      "kind": "milestone",
+      "start": "2030-03-15",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "defence",
+      "ringId": "milestones",
+      "title": "Disputation (ändra mig)",
+      "kind": "milestone",
+      "start": "2030-06-05",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "course-methods",
+      "ringId": "courses",
+      "title": "Kurs i forskningsmetodik (ändra mig)",
+      "kind": "span",
+      "start": "2026-09-07",
+      "end": "2026-10-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "course-ethics",
+      "ringId": "courses",
+      "title": "Kurs i forskningsetik (ändra mig)",
+      "kind": "span",
+      "start": "2027-01-18",
+      "end": "2027-03-19",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "course-field",
+      "ringId": "courses",
+      "title": "Fördjupningskurs inom ditt område (ändra mig)",
+      "kind": "span",
+      "start": "2027-09-06",
+      "end": "2027-12-17",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "course-teaching",
+      "ringId": "courses",
+      "title": "Högskolepedagogik (ändra mig)",
+      "kind": "span",
+      "start": "2028-01-17",
+      "end": "2028-03-17",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "paper-1",
+      "ringId": "papers",
+      "title": "Artikel 1 inskickad (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-06-15",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "paper-2",
+      "ringId": "papers",
+      "title": "Artikel 2 inskickad (ändra mig)",
+      "kind": "milestone",
+      "start": "2028-05-31",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "paper-3",
+      "ringId": "papers",
+      "title": "Artikel 3 inskickad (ändra mig)",
+      "kind": "milestone",
+      "start": "2029-04-30",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "conference",
+      "ringId": "papers",
+      "title": "Årlig konferens (ändra mig)",
+      "kind": "span",
+      "start": "2027-06-07",
+      "end": "2027-06-11",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "thesis-writing",
+      "ringId": "papers",
+      "title": "Avhandlingsskrivande (ändra mig)",
+      "kind": "span",
+      "start": "2029-09-01",
+      "end": "2030-02-15",
+      "status": "planned",
+      "recurrence": "none",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "teaching-lab",
+      "ringId": "teaching",
+      "title": "Labbhandledning (ändra mig)",
+      "kind": "span",
+      "start": "2027-01-18",
+      "end": "2027-03-19",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

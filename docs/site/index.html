@@ -1,0 +1,102 @@
+<!doctype html>
+<!-- Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>. MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Year Wheel: plan your year on one page</title>
+<meta name="description" content="A free, offline planning wheel for departments, research groups, labs and PhD students. One HTML file, no installation, your data stays on your computer.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%230072B2' stroke-width='2.5'/%3E%3Ccircle cx='12' cy='12' r='5' fill='none' stroke='%23E69F00' stroke-width='2.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="topbar"><div class="in">
+  <a class="brand" href="./"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#56B4E9" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#E69F00" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="#fff" stroke-width="2"/></svg>Year Wheel</a>
+  <nav aria-label="Site">
+    <a href="./" aria-current="page">Home</a>
+    <a href="guide.html">Guide</a>
+    <a href="app/yearwheel.html">Open the app</a>
+    <a href="https://github.com/rtomkowski/yearwheel/releases/latest">Download</a>
+    <a href="https://github.com/rtomkowski/yearwheel">GitHub</a>
+  </nav>
+</div></header>
+
+<main>
+  <section class="hero">
+    <div class="in">
+      <div style="padding-bottom:56px">
+        <h1>Plan your year on&nbsp;one&nbsp;page.</h1>
+        <p class="lede">Year Wheel draws the whole year as a wheel, with a ring for each area of work.
+          Deadlines, courses, meetings, lab work and breaks in one picture that everyone understands at a glance.</p>
+        <div class="cta">
+          <a class="btn primary" href="app/demo.html">Try the demo</a>
+          <a class="btn ghost" href="app/yearwheel.html">Start your own</a>
+          <a class="btn ghost" href="https://github.com/rtomkowski/yearwheel/releases/latest/download/Year-Wheel.zip">Download (ZIP)</a>
+        </div>
+        <p class="small">Free and open source (MIT). One HTML file: no installation, no account. English and Svenska.</p>
+      </div>
+      <div class="shot"><img src="images/wheel-only.png" alt="A year wheel with rings for research, education, department, lab and breaks" width="1400" height="1080"></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Made for the way academic years really work</h2>
+    <p class="sub">For departments, research groups, labs, course coordinators and PhD students. Start from a template, or from a blank wheel.</p>
+    <div class="grid3">
+      <div class="feature" style="--c:var(--blue)"><h3>The whole year at a glance</h3><p>Months, week numbers, quarters, study periods and today's date. January at the top, running clockwise like a clock.</p></div>
+      <div class="feature" style="--c:var(--orange)"><h3>Plans as they really are</h3><p>One-day deadlines, spans over weeks, meetings with times, courses with the same hours each day, retreats from lunch to lunch, and yearly events.</p></div>
+      <div class="feature" style="--c:var(--green)"><h3>Kept up to date</h3><p>A short quarterly review steps through the coming events. Every move or cancellation keeps its reason in a change log.</p></div>
+      <div class="feature" style="--c:var(--pink)"><h3>Share it your way</h3><p>Send the file, print it on A3, export a picture, a calendar file for Outlook and Google Calendar, or a spreadsheet for Excel.</p></div>
+      <div class="feature" style="--c:var(--sky)"><h3>Bring your dates</h3><p>Import from Outlook, Google Calendar or a spreadsheet, and choose a ring for each event.</p></div>
+      <div class="feature" style="--c:#D55E00"><h3>Private by design</h3><p>The app makes no network requests. Your wheel is a file on your computer, never stored on this website.</p></div>
+    </div>
+  </section>
+
+  <div class="band"><section class="block">
+    <h2>A closer look</h2>
+    <p class="sub">Everything you can see on the wheel can also be edited in a table, reviewed every quarter, and printed.</p>
+    <div class="shots">
+      <figure><img src="images/editor.png" alt="Editing an event: a retreat from lunch to lunch" loading="lazy"><figcaption>Edit events on the wheel: times, rings, status, repeats and notes.</figcaption></figure>
+      <figure><img src="images/list.png" alt="The list view, a sortable table of all events" loading="lazy"><figcaption>The list view: sort and filter every event.</figcaption></figure>
+      <figure><img src="images/review.png" alt="A quarterly review dialog" loading="lazy"><figcaption>The quarterly review, one event at a time.</figcaption></figure>
+      <figure><img src="images/settings.png" alt="Settings: year start, quarters, time zone, text size and colours" loading="lazy"><figcaption>Your own year start, study periods, text size and colours.</figcaption></figure>
+    </div>
+  </section></div>
+
+  <section class="block">
+    <h2>Start in a minute</h2>
+    <ol class="steps">
+      <li><b>Get the app</b>Open it <a href="app/yearwheel.html">online</a>, or <a href="https://github.com/rtomkowski/yearwheel/releases/latest/download/Year-Wheel.zip">download the ZIP</a> and open <code>yearwheel.html</code>.</li>
+      <li><b>Pick a template</b>Research team, department admin, lab, PhD journey or course periods.</li>
+      <li><b>Add your dates</b>On the wheel, in the list, or imported from your calendar or a spreadsheet.</li>
+      <li><b>Save and share</b>Save the .json file in a shared folder, print it, or send a calendar export.</li>
+    </ol>
+    <p style="color:var(--muted);font-size:15px;margin-top:18px">Chrome and Edge can save straight back into your file. Safari and Firefox work too, but save each change as a new copy in Downloads.</p>
+  </section>
+
+  <div class="band"><section class="block">
+    <h2>Downloads</h2>
+    <div class="downloads">
+      <a href="https://github.com/rtomkowski/yearwheel/releases/latest/download/Year-Wheel.zip"><b>Year-Wheel.zip</b><span>The app, demo wheel, CSV template, guide and poster</span></a>
+      <a href="https://github.com/rtomkowski/yearwheel/releases/latest/download/Year-Wheel-User-Guide.pdf"><b>User guide (PDF)</b><span>About ten pages, with screenshots</span></a>
+      <a href="https://github.com/rtomkowski/yearwheel/releases/latest/download/Year-Wheel-Poster.pdf"><b>Poster (PDF)</b><span>A4, for the notice board</span></a>
+      <a href="downloads/demo-department-2026-27.json" download><b>Demo wheel (.json)</b><span>A fictional department, to open in the app</span></a>
+      <a href="downloads/year-wheel-import-template.csv" download><b>Spreadsheet template (.csv)</b><span>The import format, one row of each kind</span></a>
+      <a href="guide.html"><b>Online guide</b><span>The full guide as a web page</span></a>
+    </div>
+  </section></div>
+
+  <section class="block">
+    <div class="privacy">
+      <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z" fill="none" stroke="#009E73" stroke-width="2"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="#009E73" stroke-width="2"/></svg>
+      <div><b>Your data stays with you.</b> The online version is the same single file as the download. It never sends or stores your wheel anywhere: Save writes a file on your computer. The demo uses fictional people and dates.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  © 2026 Robert Tomkowski (rtom@kth.se) · <a href="https://github.com/rtomkowski/yearwheel/blob/main/LICENSE">MIT License</a> ·
+  Developed with the assistance of Claude Code · <a href="https://github.com/rtomkowski/yearwheel">Source on GitHub</a>
+</footer>
+</body>
+</html>

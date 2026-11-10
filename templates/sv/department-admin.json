@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "id": "department-admin",
+  "title": "Institutionens administrativa år",
+  "owner": "",
+  "template": "department-admin",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "sv",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "board",
+      "name": "Styrelse och möten",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "budget",
+      "name": "Budget och ekonomi",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "reporting",
+      "name": "Rapportering",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "staff",
+      "name": "Personal och HR",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "board-feb",
+      "ringId": "board",
+      "title": "Styrelsemöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-02-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "board-apr",
+      "ringId": "board",
+      "title": "Styrelsemöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-04-21",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "board-sep",
+      "ringId": "board",
+      "title": "Styrelsemöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "board-nov",
+      "ringId": "board",
+      "title": "Styrelsemöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-11-24",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "budget-draft",
+      "ringId": "budget",
+      "title": "Budgetförslag för nästa år (ändra mig)",
+      "kind": "span",
+      "start": "2027-08-23",
+      "end": "2027-10-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "budget-decision",
+      "ringId": "budget",
+      "title": "Budgetbeslut (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-11-24",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "tertial-1",
+      "ringId": "budget",
+      "title": "Ekonomisk uppföljning 1 (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-05-12",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "tertial-2",
+      "ringId": "budget",
+      "title": "Ekonomisk uppföljning 2 (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-09-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "annual-report",
+      "ringId": "reporting",
+      "title": "Arbete med årsredovisning (ändra mig)",
+      "kind": "span",
+      "start": "2027-01-11",
+      "end": "2027-02-19",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "annual-report-due",
+      "ringId": "reporting",
+      "title": "Årsredovisning klar (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-02-26",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "ops-plan",
+      "ringId": "reporting",
+      "title": "Verksamhetsplan klar (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-12-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "appraisals",
+      "ringId": "staff",
+      "title": "Medarbetarsamtal (ändra mig)",
+      "kind": "span",
+      "start": "2027-03-01",
+      "end": "2027-04-16",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "salary-review",
+      "ringId": "staff",
+      "title": "Lönerevision (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-10-01",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
+      "id": "staff-day",
+      "ringId": "staff",
+      "title": "Personaldag (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-08-26",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se> MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic).",
+  "$id": "https://example.invalid/yearwheel/wheel.schema.json",
+  "title": "Year Wheel",
+  "description": "A year wheel (arshjul) data file. schemaVersion 1.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "yearStart", "settings", "rings", "events", "reviews", "changelog"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string" },
+    "yearStart": { "$ref": "#/$defs/date" },
+    "years": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "template": { "type": "string" },
+    "settings": { "$ref": "#/$defs/settings" },
+    "rings": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/ring" }
+    },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "reviews": { "type": "array", "items": { "$ref": "#/$defs/review" } },
+    "changelog": { "type": "array", "items": { "$ref": "#/$defs/changelogEntry" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "format": "date" },
+    "time": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/date" },
+        "end": { "$ref": "#/$defs/date" },
+        "startTime": { "$ref": "#/$defs/time" },
+        "endTime": { "$ref": "#/$defs/time" },
+        "timing": { "enum": ["daily", "continuous"] }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": { "enum": ["en", "sv"], "description": "Language the wheel was created in. The app's language is each person's own choice." },
+        "weekTicks": { "type": "boolean" },
+        "showPeriods": { "type": "boolean" },
+        "showQuarters": { "type": "boolean" },
+        "quarterStartMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "wheelTop": { "enum": ["january", "yearStart"], "description": "What sits at 12 o'clock; omitted means january." },
+        "colorOpacity": { "type": "number", "minimum": 0.1, "maximum": 1, "description": "How solid the ring colours are: 1 is exactly the chosen colour; omitted means 0.4." },
+        "textScale": { "type": "number", "minimum": 0.7, "maximum": 1.5, "description": "Size of all text on the wheel; omitted means 1." },
+        "ringOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "How solid the band behind each ring is: 1 is exactly the ring colour; omitted means 0.1." },
+        "colorStrength": { "type": "number", "minimum": 0.5, "maximum": 1.75, "description": "Older setting, converted to colorOpacity when the app opens the file." },
+        "timeZone": { "type": "string", "minLength": 1, "description": "IANA zone for event times, e.g. Europe/Stockholm" },
+        "periods": { "type": "array", "items": { "$ref": "#/$defs/period" } }
+      }
+    },
+    "period": {
+      "type": "object",
+      "required": ["id", "label", "start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string", "minLength": 1 },
+        "start": { "$ref": "#/$defs/date" },
+        "end": { "$ref": "#/$defs/date" },
+        "placeholder": { "type": "boolean" }
+      }
+    },
+    "ring": {
+      "type": "object",
+      "required": ["id", "name", "color", "order"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "order": { "type": "integer", "minimum": 0 },
+        "hidden": { "type": "boolean", "description": "Ring kept but not drawn on the wheel, in prints or in image exports." }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "ringId", "title", "kind", "start", "status", "recurrence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "ringId": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["milestone", "span"] },
+        "start": { "$ref": "#/$defs/date" },
+        "end": { "$ref": "#/$defs/date" },
+        "startTime": { "$ref": "#/$defs/time", "description": "Omit both times for whole days." },
+        "endTime": { "$ref": "#/$defs/time" },
+        "timing": { "enum": ["daily", "continuous"], "description": "Spans with times: the same hours each day, or from the start time on the first day to the end time on the last day." },
+        "status": { "enum": ["planned", "moved", "cancelled", "done"] },
+        "recurrence": { "enum": ["none", "yearly"] },
+        "owner": { "type": "string" },
+        "notes": { "type": "string" },
+        "placeholder": { "type": "boolean" },
+        "prevStart": { "$ref": "#/$defs/date" },
+        "prevEnd": { "$ref": "#/$defs/date" }
+      },
+      "dependentRequired": { "startTime": ["endTime"], "endTime": ["startTime"], "timing": ["startTime"] },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "span" } }, "required": ["kind"] },
+          "then": { "required": ["end"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "span" } }, "required": ["kind", "startTime"] },
+          "then": { "required": ["timing"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "milestone" } }, "required": ["kind"] },
+          "then": { "not": { "required": ["timing"] } }
+        }
+      ]
+    },
+    "review": {
+      "type": "object",
+      "required": ["quarter", "date"],
+      "additionalProperties": false,
+      "properties": {
+        "quarter": { "type": "string", "pattern": "^[0-9]{4}-Q[1-4]$" },
+        "date": { "$ref": "#/$defs/date" },
+        "reviewer": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "changelogEntry": {
+      "type": "object",
+      "required": ["timestamp", "eventId", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": { "type": "string", "minLength": 10 },
+        "eventId": { "$ref": "#/$defs/id" },
+        "title": { "type": "string" },
+        "action": { "enum": ["created", "edited", "moved", "cancelled", "deleted"] },
+        "before": { "$ref": "#/$defs/dateRange" },
+        "after": { "$ref": "#/$defs/dateRange" },
+        "reason": { "type": "string" }
+      },
+      "if": { "properties": { "action": { "enum": ["moved", "cancelled"] } }, "required": ["action"] },
+      "then": {
+        "required": ["reason"],
+        "properties": { "reason": { "type": "string", "minLength": 1, "pattern": "\\S" } }
+      }
+    }
+  }
+}

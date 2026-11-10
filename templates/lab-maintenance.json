@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "id": "lab-maintenance",
+  "title": "Lab maintenance and calibration",
+  "owner": "",
+  "template": "lab-maintenance",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "en",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "calibration",
+      "name": "Calibration",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "service",
+      "name": "Service visits",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "safety",
+      "name": "Safety",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "cal-cmm",
+      "ringId": "calibration",
+      "title": "CMM calibration (edit me)",
+      "kind": "milestone",
+      "start": "2027-02-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-interferometer",
+      "ringId": "calibration",
+      "title": "Interferometer calibration (edit me)",
+      "kind": "milestone",
+      "start": "2027-04-12",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-roughness-1",
+      "ringId": "calibration",
+      "title": "Roughness standard check (edit me)",
+      "kind": "milestone",
+      "start": "2027-03-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-roughness-2",
+      "ringId": "calibration",
+      "title": "Roughness standard check (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-06",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "cal-gauge-blocks",
+      "ringId": "calibration",
+      "title": "Gauge block verification (edit me)",
+      "kind": "milestone",
+      "start": "2027-10-18",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-summer",
+      "ringId": "maintenance",
+      "title": "Preventive maintenance, all instruments (edit me)",
+      "kind": "span",
+      "start": "2027-07-05",
+      "end": "2027-07-23",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-winter",
+      "ringId": "maintenance",
+      "title": "Preventive maintenance, all instruments (edit me)",
+      "kind": "span",
+      "start": "2027-12-13",
+      "end": "2027-12-22",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "maint-filters",
+      "ringId": "maintenance",
+      "title": "Air filter and climate check (edit me)",
+      "kind": "milestone",
+      "start": "2027-05-17",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "svc-cmm",
+      "ringId": "service",
+      "title": "CMM vendor service visit (edit me)",
+      "kind": "span",
+      "start": "2027-02-08",
+      "end": "2027-02-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "svc-microscope",
+      "ringId": "service",
+      "title": "Optical profilometer service (edit me)",
+      "kind": "milestone",
+      "start": "2027-11-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-inspection",
+      "ringId": "safety",
+      "title": "Lab safety inspection (edit me)",
+      "kind": "milestone",
+      "start": "2027-03-22",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-chemicals",
+      "ringId": "safety",
+      "title": "Chemical inventory (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-27",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "safety-training",
+      "ringId": "safety",
+      "title": "Safety training for new users (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-02",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

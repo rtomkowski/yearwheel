@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "id": "department-admin",
+  "title": "Department admin year",
+  "owner": "",
+  "template": "department-admin",
+  "yearStart": "2027-01-01",
+  "years": 1,
+  "settings": {
+    "language": "en",
+    "weekTicks": false,
+    "showPeriods": false,
+    "showQuarters": true,
+    "quarterStartMonth": 1,
+    "periods": [
+      {
+        "id": "p1",
+        "label": "P1",
+        "start": "2026-08-31",
+        "end": "2026-10-30",
+        "placeholder": true
+      },
+      {
+        "id": "p2",
+        "label": "P2",
+        "start": "2026-11-02",
+        "end": "2027-01-15",
+        "placeholder": true
+      },
+      {
+        "id": "p3",
+        "label": "P3",
+        "start": "2027-01-18",
+        "end": "2027-03-19",
+        "placeholder": true
+      },
+      {
+        "id": "p4",
+        "label": "P4",
+        "start": "2027-03-22",
+        "end": "2027-06-04",
+        "placeholder": true
+      }
+    ]
+  },
+  "rings": [
+    {
+      "id": "board",
+      "name": "Board and meetings",
+      "color": "#0072B2",
+      "order": 0
+    },
+    {
+      "id": "budget",
+      "name": "Budget and finance",
+      "color": "#E69F00",
+      "order": 1
+    },
+    {
+      "id": "reporting",
+      "name": "Reporting",
+      "color": "#009E73",
+      "order": 2
+    },
+    {
+      "id": "staff",
+      "name": "Staff and HR",
+      "color": "#CC79A7",
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "board-feb",
+      "ringId": "board",
+      "title": "Board meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-02-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "board-apr",
+      "ringId": "board",
+      "title": "Board meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-04-21",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "board-sep",
+      "ringId": "board",
+      "title": "Board meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-15",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "board-nov",
+      "ringId": "board",
+      "title": "Board meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-11-24",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "budget-draft",
+      "ringId": "budget",
+      "title": "Budget draft for next year (edit me)",
+      "kind": "span",
+      "start": "2027-08-23",
+      "end": "2027-10-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "budget-decision",
+      "ringId": "budget",
+      "title": "Budget decision (edit me)",
+      "kind": "milestone",
+      "start": "2027-11-24",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "tertial-1",
+      "ringId": "budget",
+      "title": "Financial follow-up 1 (edit me)",
+      "kind": "milestone",
+      "start": "2027-05-12",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "tertial-2",
+      "ringId": "budget",
+      "title": "Financial follow-up 2 (edit me)",
+      "kind": "milestone",
+      "start": "2027-09-08",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "annual-report",
+      "ringId": "reporting",
+      "title": "Annual report writing (edit me)",
+      "kind": "span",
+      "start": "2027-01-11",
+      "end": "2027-02-19",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "annual-report-due",
+      "ringId": "reporting",
+      "title": "Annual report due (edit me)",
+      "kind": "milestone",
+      "start": "2027-02-26",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "ops-plan",
+      "ringId": "reporting",
+      "title": "Operational plan due (edit me)",
+      "kind": "milestone",
+      "start": "2027-12-10",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "appraisals",
+      "ringId": "staff",
+      "title": "Performance reviews (edit me)",
+      "kind": "span",
+      "start": "2027-03-01",
+      "end": "2027-04-16",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "salary-review",
+      "ringId": "staff",
+      "title": "Salary review (edit me)",
+      "kind": "milestone",
+      "start": "2027-10-01",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
+      "id": "staff-day",
+      "ringId": "staff",
+      "title": "Staff day (edit me)",
+      "kind": "milestone",
+      "start": "2027-08-26",
+      "status": "planned",
+      "recurrence": "yearly",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    }
+  ],
+  "reviews": [],
+  "changelog": []
+}

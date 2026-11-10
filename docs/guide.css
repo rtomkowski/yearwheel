@@ -1,0 +1,34 @@
+/* Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>
+   MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic). */
+/* Print styling for the user guide (pandoc HTML -> Chrome PDF). */
+@page { size: A4; margin: 18mm 17mm 18mm 17mm; }
+:root { --ink: #1d232a; --muted: #5b646e; --line: #d6dadf; --accent: #0b5cad; --band: #f1f3f5; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font: 10.5pt/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink); max-width: 175mm; margin: 0 auto;
+}
+h1 { font-size: 24pt; line-height: 1.15; margin: 0 0 6pt; color: var(--ink); letter-spacing: -0.01em; }
+h1 + p { font-size: 12.5pt; color: var(--ink); }
+h2 {
+  font-size: 15pt; margin: 22pt 0 6pt; padding-top: 6pt; border-top: 2px solid var(--accent);
+  break-after: avoid;
+}
+h2 + p, h2 + ul, h2 + ol { break-before: avoid; }
+ol { break-inside: avoid; }
+p:has(+ table), p:has(+ pre), p:has(+ figure) { break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 14pt 0 4pt; break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+ul, ol { padding-left: 18pt; }
+li { margin: 2pt 0; }
+a { color: var(--accent); text-decoration: none; }
+strong { font-weight: 650; }
+code { font: 9pt/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--band); padding: 0 3pt; border-radius: 3pt; }
+pre { background: var(--band); border: 1px solid var(--line); border-radius: 5pt; padding: 7pt 9pt; break-inside: avoid; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0 10pt; font-size: 9.5pt; break-inside: avoid; }
+th, td { border-bottom: 1px solid var(--line); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+th { background: var(--band); font-weight: 650; }
+figure { margin: 10pt 0 12pt; break-inside: avoid; }
+figure img, p > img { width: 100%; border: 1px solid var(--line); border-radius: 5pt; display: block; }
+figcaption { color: var(--muted); font-size: 9pt; margin-top: 4pt; }

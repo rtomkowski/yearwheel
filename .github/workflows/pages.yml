@@ -1,0 +1,35 @@
+# Year Wheel. Copyright (c) 2026 Robert Tomkowski <rtom@kth.se>
+# MIT License (see the LICENSE file). Developed with the assistance of Claude Code (Anthropic).
+# Publishes the prebuilt website/ folder (made by tools/build_site.py) with GitHub Pages.
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths: ["website/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.repository == 'rtomkowski/yearwheel'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+      - id: deployment
+        uses: actions/deploy-pages@v4
