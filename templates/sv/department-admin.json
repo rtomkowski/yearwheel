@@ -115,6 +115,18 @@
       "placeholder": true
     },
     {
+      "id": "dept-meeting",
+      "ringId": "board",
+      "title": "Institutionsmöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-01-20",
+      "status": "planned",
+      "recurrence": "monthly",
+      "interval": 2,
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
+    },
+    {
       "id": "budget-draft",
       "ringId": "budget",
       "title": "Budgetförslag för nästa år (ändra mig)",

@@ -205,15 +205,17 @@ def test_csv_export_round_trip_of_demo_wheel():
     with open(DEMO, encoding="utf-8") as f:
         wheel = json.load(f)
     csv = run_js("wheelToCsv(input)", wheel)
-    assert csv.startswith("﻿sep=;\r\ntitle;start;end;ring;status;start time;end time;timing;repeats;owner;notes\r\n")
+    assert csv.startswith("﻿sep=;\r\ntitle;start;end;ring;status;start time;end time;timing;repeats;until;owner;notes\r\n")
     res = run_js("csvToItems(input)", csv)
     assert res["warnings"] == []
     rings = {r["id"]: r["name"] for r in wheel["rings"]}
     got = sorted((i["title"], i["start"], i["end"], i["ring"], i["status"], i["startTime"], i["endTime"], i["timing"],
-                  i["recurrence"], i["owner"], i["notes"]) for i in res["items"])
+                  i["recurrence"], i["interval"], i["monthlyBy"], i["until"], i["owner"], i["notes"]) for i in res["items"])
     want = sorted((e["title"], e["start"], e.get("end", e["start"]), rings[e["ringId"]], e["status"], e.get("startTime", ""),
-                   e.get("endTime", ""), e.get("timing", ""), e["recurrence"], e.get("owner", ""), e.get("notes", ""))
+                   e.get("endTime", ""), e.get("timing", ""), e["recurrence"], e.get("interval", 1), e.get("monthlyBy", ""),
+                   e.get("until", ""), e.get("owner", ""), e.get("notes", ""))
                   for e in wheel["events"])
+    assert any(e["recurrence"] == "monthly" for e in wheel["events"]), "the demo shows monthly meetings"
     assert got == want
 
 
@@ -249,6 +251,6 @@ def test_csv_swedish_headings_and_sep_line():
 
 
 def test_csv_unknown_repeats_is_reported():
-    res = run_js("csvToItems(input)", "title;start;repeats\nA;2027-01-05;monthly\n")
+    res = run_js("csvToItems(input)", "title;start;repeats\nA;2027-01-05;now and then\n")
     assert res["warnings"] == [{"line": 2, "msg": "repeats"}]
     assert res["items"][0]["recurrence"] == "none"

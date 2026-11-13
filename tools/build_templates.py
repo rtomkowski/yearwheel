@@ -32,10 +32,15 @@ def ring(i, rid, name):
 
 
 # Key order matches the app's canonical order so files round-trip byte for byte.
-def ms(eid, ring_id, title, start, recurrence="none"):
-    return {"id": eid, "ringId": ring_id, "title": title + " (edit me)", "kind": "milestone",
-            "start": start, "status": "planned", "recurrence": recurrence,
-            "notes": EDIT_ME, "placeholder": True}
+def ms(eid, ring_id, title, start, recurrence="none", interval=1, monthly_by=""):
+    e = {"id": eid, "ringId": ring_id, "title": title + " (edit me)", "kind": "milestone",
+         "start": start, "status": "planned", "recurrence": recurrence}
+    if interval > 1:
+        e["interval"] = interval
+    if monthly_by:
+        e["monthlyBy"] = monthly_by
+    e.update({"notes": EDIT_ME, "placeholder": True})
+    return e
 
 
 def span(eid, ring_id, title, start, end, recurrence="none"):
@@ -104,6 +109,7 @@ def research_team():
         span("team-summer", "team", "Summer break", "2027-07-01", "2027-08-06", "yearly"),
         ms("team-kickoff", "team", "Group kick-off day", "2027-08-23", "yearly"),
         ms("team-dev-talks", "team", "Development talks", "2027-11-10", "yearly"),
+        ms("team-meeting", "team", "Research group meeting", "2027-01-12", "monthly", monthly_by="weekday"),
     ]
     return base("research-team", "Research team year wheel", "2027-01-01", rings, events,
                 periods=academic_periods(2026))
@@ -121,6 +127,7 @@ def department_admin():
         ms("board-apr", "board", "Board meeting", "2027-04-21", "yearly"),
         ms("board-sep", "board", "Board meeting", "2027-09-15", "yearly"),
         ms("board-nov", "board", "Board meeting", "2027-11-24", "yearly"),
+        ms("dept-meeting", "board", "Department meeting", "2027-01-20", "monthly", interval=2),
         span("budget-draft", "budget", "Budget draft for next year", "2027-08-23", "2027-10-08", "yearly"),
         ms("budget-decision", "budget", "Budget decision", "2027-11-24", "yearly"),
         ms("tertial-1", "budget", "Financial follow-up 1", "2027-05-12", "yearly"),
@@ -251,7 +258,8 @@ SV = {
     "Journal paper submission": "Tidskriftsartikel inskickad", "Summer break": "Sommaruppehåll",
     "Group kick-off day": "Gruppens uppstartsdag", "Development talks": "Utvecklingssamtal",
     # department admin
-    "Board meeting": "Styrelsemöte", "Budget draft for next year": "Budgetförslag för nästa år",
+    "Board meeting": "Styrelsemöte", "Department meeting": "Institutionsmöte",
+    "Research group meeting": "Forskargruppsmöte", "Budget draft for next year": "Budgetförslag för nästa år",
     "Budget decision": "Budgetbeslut", "Financial follow-up 1": "Ekonomisk uppföljning 1",
     "Financial follow-up 2": "Ekonomisk uppföljning 2", "Annual report writing": "Arbete med årsredovisning",
     "Annual report due": "Årsredovisning klar", "Operational plan due": "Verksamhetsplan klar",

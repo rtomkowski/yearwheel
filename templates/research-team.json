@@ -217,6 +217,18 @@
       "recurrence": "yearly",
       "notes": "Placeholder date. Edit me.",
       "placeholder": true
+    },
+    {
+      "id": "team-meeting",
+      "ringId": "team",
+      "title": "Research group meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-01-12",
+      "status": "planned",
+      "recurrence": "monthly",
+      "monthlyBy": "weekday",
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
     }
   ],
   "reviews": [],

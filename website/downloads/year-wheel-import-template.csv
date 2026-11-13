@@ -1,8 +1,10 @@
 ﻿sep=;
-title;start;end;ring;status;start time;end time;timing;repeats;owner;notes
-Budget draft;2027-02-01;2027-03-15;Department;planned;;;;;Head of department;A span: several whole days
-Board meeting;2027-04-12;;Department;planned;13:00;15:00;;;;A milestone with a time
-Paper deadline;2027-05-03;;Research;planned;;;;;PhD student;A milestone: one whole day
-Course week;2027-03-02;2027-03-04;Education;planned;09:00;16:00;daily;;;Same hours each day
-Writing retreat;2027-05-10;2027-05-12;Research;planned;12:00;12:00;continuous;;;Lunch to lunch
-Annual report due;2027-02-26;;Department;planned;;;;yearly;;Repeats every year
+title;start;end;ring;status;start time;end time;timing;repeats;until;owner;notes
+Budget draft;2027-02-01;2027-03-15;Department;planned;;;;;;Head of department;A span: several whole days
+Board meeting;2027-04-12;;Department;planned;13:00;15:00;;;;;A milestone with a time
+Paper deadline;2027-05-03;;Research;planned;;;;;;PhD student;A milestone: one whole day
+Course week;2027-03-02;2027-03-04;Education;planned;09:00;16:00;daily;;;;Same hours each day
+Writing retreat;2027-05-10;2027-05-12;Research;planned;12:00;12:00;continuous;;;;Lunch to lunch
+Annual report due;2027-02-26;;Department;planned;;;;yearly;;;Repeats every year
+Research group meeting;2027-01-12;;Research;planned;10:00;11:00;;monthly by weekday;2027-06-30;;The 2nd Tuesday of every month until June
+Department meeting;2027-01-20;;Department;planned;14:00;15:30;;every 2 months;;Head of department;Every second month

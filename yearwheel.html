@@ -140,6 +140,8 @@ main { flex: 1; display: flex; min-height: 0; position: relative; }
 .error { color: var(--danger); font-size: 13px; margin: 0; min-height: 1em; }
 .history { list-style: none; padding: 0; margin: 0; font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
 .history b { color: var(--fg); font-weight: 600; }
+.occ-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.occ-box h2 { font-size: 14px; margin: 0; }
 .ring-list, .period-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ring-list li, .period-list li { display: flex; gap: 6px; align-items: center; }
 .ring-list li input[type=text] { flex: 1; }
@@ -440,9 +442,30 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
         <label><span data-i18n="fRepeats">Repeats</span>
           <select name="recurrence">
             <option value="none" data-i18n="rec_none">Does not repeat</option>
+            <option value="weekly" data-i18n="rec_weekly">Weekly</option>
+            <option value="monthly" data-i18n="rec_monthly">Monthly</option>
             <option value="yearly" data-i18n="rec_yearly">Every year</option>
           </select>
         </label>
+      </div>
+      <div id="repeatWrap" class="panel" style="padding:0;gap:8px" hidden>
+        <div class="row">
+          <label><span id="lblInterval"></span> <input type="number" name="interval" min="1" max="52" step="1" inputmode="numeric"></label>
+          <label><span data-i18n="fUntil">Until (optional)</span> <input type="date" name="until"></label>
+        </div>
+        <label id="monthlyByWrap"><span data-i18n="fMonthlyBy">On</span> <select name="monthlyBy"><option value="date"></option><option value="weekday"></option></select></label>
+        <p class="hint" id="repeatHint"></p>
+      </div>
+      <div id="occWrap" class="occ-box" hidden>
+        <h2 id="occTitle"></h2>
+        <label><span data-i18n="occNewDate">New date</span> <input type="date" id="occDate"></label>
+        <div class="btns">
+          <button type="button" id="btnOccMove" data-i18n="occMove">Move this one</button>
+          <button type="button" id="btnOccCancel" data-i18n="occCancel">Cancel this one</button>
+          <button type="button" id="btnOccDone" data-i18n="rvDone">Mark done</button>
+          <button type="button" id="btnOccRestore" data-i18n="occRestore">Restore</button>
+        </div>
+        <p class="hint" data-i18n="occHint">These buttons change only this one. The other fields change the whole series.</p>
       </div>
       <label><span data-i18n="fOwner">Owner</span> <input name="owner" maxlength="80" autocomplete="off"></label>
       <label><span data-i18n="fNotes">Notes</span> <textarea name="notes" rows="3"></textarea></label>
@@ -453,6 +476,10 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
         <button type="button" id="btnEvDelete" class="danger" data-i18n="delete">Delete</button>
       </div>
       <p class="hint" data-i18n="moveHint">Changing dates or cancelling asks for a reason, which is kept in the change log.</p>
+      <div id="excWrap" hidden>
+        <h2 style="font-size:14px" data-i18n="occChanged">Changed occurrences</h2>
+        <ul class="history" id="excList"></ul>
+      </div>
       <div id="evHistoryWrap" hidden>
         <h2 style="font-size:14px" data-i18n="history">History</h2>
         <ul class="history" id="evHistory"></ul>
@@ -597,7 +624,19 @@ const STR = {
     fTitle: 'Title', fRing: 'Ring', fKind: 'Kind', milestone: 'Milestone', span: 'Span', fStart: 'Start', fEnd: 'End',
     fStatus: 'Status', fRepeats: 'Repeats', fOwner: 'Owner', fNotes: 'Notes',
     st_planned: 'Planned', st_moved: 'Moved', st_done: 'Done', st_cancelled: 'Cancelled',
-    rec_none: 'Does not repeat', rec_yearly: 'Every year',
+    rec_none: 'Does not repeat', rec_yearly: 'Every year', rec_weekly: 'Weekly', rec_monthly: 'Monthly',
+    fIntervalWeeks: 'Every how many weeks', fIntervalMonths: 'Every how many months', fUntil: 'Until (optional)', fMonthlyBy: 'On',
+    onDay: 'Day {d} of each month', onWeekday: 'The {x} of each month',
+    hintMonthEnd: 'Months without day {d} are skipped',
+    repWeek1: 'Every week', repWeek2: 'Every 2 weeks', repWeekN: 'Every {n} weeks',
+    repMonth1: 'Every month', repMonth2: 'Every 2 months', repMonthN: 'Every {n} months', repUntil: 'until {d}',
+    nth1: 'first', nth2: 'second', nth3: 'third', nth4: 'fourth', nthLast: 'last', nthWeekday: '{nth} {wd}',
+    occTitle: 'This occurrence: {d} ({s})', occNewDate: 'New date', occMove: 'Move this one', occCancel: 'Cancel this one',
+    occRestore: 'Restore', occHint: 'These buttons change only this occurrence. The other fields change the whole series.',
+    occChanged: 'Changed occurrences', occMovedTo: 'to {d}', rvOnlyThis: 'Repeats: changes here apply to this occurrence only.',
+    errInterval: 'Repeat every 1 to 52 weeks or months.', errUntil: 'The repeat end date must be on or after the start.',
+    errRepeatLong: 'A repeating span must be shorter than the time between repeats.',
+    warnRepeat: '{name} has an unknown repeat value.', csv_until: 'until is not a date on or after the start, ignored',
     apply: 'Apply', cancelEvent: 'Cancel event', delete: 'Delete', history: 'History',
     moveHint: 'Changing dates or cancelling asks for a reason, which is kept in the change log.',
     newEvent: 'New event', editEvent: 'Edit event',
@@ -661,7 +700,7 @@ const STR = {
     csvLine: 'Line {line}: {msg}', csv_title: 'no title, skipped', csv_start: 'missing or invalid start date (use YYYY-MM-DD), skipped',
     csv_end: 'invalid end date or end before start, skipped', csv_status: 'unknown status, set to planned',
     csv_header: 'the first row must name the columns, including title and start (Import > Spreadsheet template shows the format)', csv_empty: 'the file is empty',
-    csv_repeats: 'unknown value in repeats (use yearly or leave empty), set to does not repeat',
+    csv_repeats: 'unknown value in repeats (use weekly, monthly, yearly, every 2 weeks, every 3 months or leave empty), set to does not repeat',
     exCsv: 'Spreadsheet (.csv)', imCsvTemplate: 'Spreadsheet template (.csv)',
     csvRingUnknown: 'Ring "{ring}" not found: using the ring chosen above.',
     to: 'to', dailyHours: '{from} to {to} each day', wholeDays: 'Whole days',
@@ -690,7 +729,19 @@ const STR = {
     fTitle: 'Titel', fRing: 'Ring', fKind: 'Typ', milestone: 'Milstolpe', span: 'Period', fStart: 'Start', fEnd: 'Slut',
     fStatus: 'Status', fRepeats: 'Upprepas', fOwner: 'Ansvarig', fNotes: 'Anteckningar',
     st_planned: 'Planerad', st_moved: 'Flyttad', st_done: 'Klar', st_cancelled: 'Inställd',
-    rec_none: 'Upprepas inte', rec_yearly: 'Varje år',
+    rec_none: 'Upprepas inte', rec_yearly: 'Varje år', rec_weekly: 'Varje vecka', rec_monthly: 'Varje månad',
+    fIntervalWeeks: 'Antal veckor mellan gångerna', fIntervalMonths: 'Antal månader mellan gångerna', fUntil: 'Till och med (valfritt)', fMonthlyBy: 'Dag',
+    onDay: 'Dag {d} i varje månad', onWeekday: 'Den {x} i varje månad',
+    hintMonthEnd: 'Månader utan dag {d} hoppas över',
+    repWeek1: 'Varje vecka', repWeek2: 'Varannan vecka', repWeekN: 'Var {n}:e vecka',
+    repMonth1: 'Varje månad', repMonth2: 'Varannan månad', repMonthN: 'Var {n}:e månad', repUntil: 'till och med {d}',
+    nth1: 'första', nth2: 'andra', nth3: 'tredje', nth4: 'fjärde', nthLast: 'sista', nthWeekday: '{nth} {wd}en',
+    occTitle: 'Detta tillfälle: {d} ({s})', occNewDate: 'Nytt datum', occMove: 'Flytta detta tillfälle', occCancel: 'Ställ in detta tillfälle',
+    occRestore: 'Återställ', occHint: 'Knapparna här ändrar bara detta tillfälle. Övriga fält ändrar hela serien.',
+    occChanged: 'Ändrade tillfällen', occMovedTo: 'till {d}', rvOnlyThis: 'Återkommande: ändringar här gäller bara detta tillfälle.',
+    errInterval: 'Upprepa var 1 till 52 veckor eller månader.', errUntil: 'Slutdatum för upprepningen måste vara samma dag som start eller senare.',
+    errRepeatLong: 'En återkommande period måste vara kortare än tiden mellan gångerna.',
+    warnRepeat: '{name} har ett okänt värde för upprepning.', csv_until: 'until är inte ett datum från startdatum och framåt, ignoreras',
     apply: 'Verkställ', cancelEvent: 'Ställ in händelse', delete: 'Ta bort', history: 'Historik',
     moveHint: 'Om du ändrar datum eller ställer in en händelse får du ange en anledning, som sparas i ändringsloggen.',
     newEvent: 'Ny händelse', editEvent: 'Redigera händelse',
@@ -754,7 +805,7 @@ const STR = {
     csvLine: 'Rad {line}: {msg}', csv_title: 'titel saknas, hoppades över', csv_start: 'startdatum saknas eller är ogiltigt (skriv ÅÅÅÅ-MM-DD), hoppades över',
     csv_end: 'ogiltigt slutdatum eller slut före start, hoppades över', csv_status: 'okänd status, satt till planerad',
     csv_header: 'första raden ska namnge kolumnerna, bland annat title och start (Importera > Mall för kalkylblad visar formatet)', csv_empty: 'filen är tom',
-    csv_repeats: 'okänt värde i repeats (skriv yearly eller lämna tomt), satt till upprepas inte',
+    csv_repeats: 'okänt värde i repeats (skriv weekly, monthly, yearly, varannan vecka, var 3:e månad eller lämna tomt), satt till upprepas inte',
     exCsv: 'Kalkylblad (.csv)', imCsvTemplate: 'Mall för kalkylblad (.csv)',
     csvRingUnknown: 'Ringen "{ring}" hittades inte: ringen som valts ovan används.',
     to: 'till', dailyHours: '{from} till {to} varje dag', wholeDays: 'Hela dagar',
@@ -859,6 +910,54 @@ function pIsDate(s) {
   return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
 }
 function pAddDays(s, n) { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); }
+
+/* Repeats within the year: recurrence 'weekly' or 'monthly', every `interval` weeks or months
+   (omitted = 1), up to `until` (the last date a repeat may start on; omitted = no end).
+   Monthly repeats fall on the same date each month (months without that date are skipped, as in
+   iCalendar) or, with monthlyBy 'weekday' on a milestone, on the same weekday in the same week of
+   the month (the 2nd Tuesday; a start in the 5th week means the last one).
+   Same rules as wheellib.repeat_starts. */
+const P_WD = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const pDim = (y, m0) => new Date(Date.UTC(y, m0 + 1, 0)).getUTCDate();
+// Week of the month of a date: { wd: 0 to 6 (Sunday 0), nth: 1 to 4, or -1 for the last }.
+function pMonthWeek(s) {
+  const [y, m, d] = s.split('-').map(Number), n = Math.ceil(d / 7);
+  return { wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay(), nth: n > 4 ? -1 : n };
+}
+function pNthWeekday(y, m0, wd, nth) {
+  if (nth < 0) { const len = pDim(y, m0); return len - (new Date(Date.UTC(y, m0, len)).getUTCDay() - wd + 7) % 7; }
+  return 1 + (wd - new Date(Date.UTC(y, m0, 1)).getUTCDay() + 7) % 7 + (nth - 1) * 7;
+}
+const pIsRepeat = ev => ev.recurrence === 'weekly' || ev.recurrence === 'monthly';
+const pInterval = ev => { const n = Math.floor(+ev.interval || 1); return n >= 1 && n <= 52 ? n : 1; };
+const pByWeekday = ev => ev.recurrence === 'monthly' && ev.monthlyBy === 'weekday' && ev.kind !== 'span';
+// Start dates of a weekly or monthly event from `from` to `to` (inclusive), at most `max` of them.
+function repeatStarts(ev, from, to, max) {
+  const out = [], s = ev.start, iv = pInterval(ev);
+  if (!pIsDate(s) || !pIsRepeat(ev)) return out;
+  const last = pIsDate(ev.until) && ev.until < to ? ev.until : to;
+  if (from < s) from = s;
+  max = max || Infinity;
+  if (ev.recurrence === 'weekly') {
+    const step = 7 * iv, gap = Math.round((pMs(from) - pMs(s)) / 86400000);
+    for (let d = pAddDays(s, Math.ceil(gap / step) * step); d <= last && out.length < max; d = pAddDays(d, step)) out.push(d);
+    return out;
+  }
+  const [y, m, d] = s.split('-').map(Number), mw = pMonthWeek(s), byWd = pByWeekday(ev);
+  const [fy, fm] = from.split('-').map(Number);
+  for (let k = Math.max(0, Math.floor(((fy - y) * 12 + fm - m) / iv)); out.length < max; k++) {
+    const mi = m - 1 + k * iv, yy = y + Math.floor(mi / 12), mm = mi % 12, ym = yy + '-' + String(mm + 1).padStart(2, '0');
+    if (ym > last.slice(0, 7)) break;
+    const day = byWd ? pNthWeekday(yy, mm, mw.wd, mw.nth) : d;
+    if (day > pDim(yy, mm)) continue;
+    const ds = ym + '-' + String(day).padStart(2, '0');
+    if (ds > last) break;
+    if (ds >= from) out.push(ds);
+  }
+  return out;
+}
+const isRepeatStart = (ev, d) => pIsDate(d) && repeatStarts(ev, d, d, 1).length === 1;
+
 function icsUnfold(text) {
   const lines = [];
   text.replace(/\r\n|\r/g, '\n').split('\n').forEach(raw => {
@@ -949,9 +1048,21 @@ function parseIcs(text) {
       else if (cur && value.toUpperCase() === 'VEVENT') { const ev = icsFinish(cur); if (ev) events.push(ev); cur = null; }
       return;
     }
-    if (cur && !depth && !(name in cur)) cur[name] = [value, params];
+    if (cur && !depth && name === 'EXDATE') (cur._exdates = cur._exdates || []).push(...value.split(','));
+    else if (cur && !depth && !(name in cur)) cur[name] = [value, params];
   });
-  return events;
+  // A changed single meeting of a series (RECURRENCE-ID) becomes an exception of that series.
+  const out = events.filter(ev => !ev._rid);
+  events.filter(ev => ev._rid).forEach(ev => {
+    const rid = ev._rid, master = ev.uid && out.find(m => m.uid === ev.uid && !m._rid && pIsRepeat(m));
+    delete ev._rid;
+    if (!master) { out.push(ev); return; }
+    master.exceptions = master.exceptions.filter(x => x.date !== rid);
+    if (ev.status === 'cancelled') master.exceptions.push({ date: rid, status: 'cancelled' });
+    else if (ev.start !== rid || ev.end !== pAddDays(master.end, Math.round((pMs(rid) - pMs(master.start)) / 86400000))) master.exceptions.push({ date: rid, status: 'moved', start: ev.start, end: ev.end });
+    master.exceptions.sort((a, b) => (a.date < b.date ? -1 : 1));
+  });
+  return out;
 }
 // Number of days for RRULE FREQ=DAILY with COUNT or UNTIL (interval 1); 0 otherwise.
 function icsDailyCount(rrule, start) {
@@ -991,17 +1102,43 @@ function icsFinish(p) {
     }
   }
   const get = k => (p[k] ? p[k][0] : '');
-  const repeatDays = icsDailyCount(get('RRULE').toUpperCase(), start);
+  const rrule = get('RRULE').toUpperCase(), rr = {};
+  rrule.split(';').forEach(x => { const i = x.indexOf('='); if (i >= 0) rr[x.slice(0, i).trim()] = x.slice(i + 1).trim(); });
+  const repeatDays = icsDailyCount(rrule, start);
   if (allDay && repeatDays > 1 && end === start) end = pAddDays(start, repeatDays - 1); // all-day event repeated n days
-  return {
+  const recurrence = { YEARLY: 'yearly', MONTHLY: 'monthly', WEEKLY: 'weekly' }[rr.FREQ] || 'none';
+  // Weekly and monthly: interval, the nth weekday of the month (BYDAY=2TU), end date (UNTIL or COUNT)
+  // and cancelled meetings (EXDATE). Several weekdays a week (BYDAY=MO,WE) keep only the first day.
+  let interval = 1, monthlyBy = '', until = '', exceptions = [];
+  if (recurrence === 'weekly' || recurrence === 'monthly') {
+    if (/^\d+$/.test(rr.INTERVAL || '') && +rr.INTERVAL >= 1 && +rr.INTERVAL <= 52) interval = +rr.INTERVAL;
+    const bd = /^(-1|\+?[1-4])(SU|MO|TU|WE|TH|FR|SA)$/.exec(rr.BYDAY || ''), mw = pMonthWeek(start);
+    const kind = end !== start ? 'span' : 'milestone';
+    if (recurrence === 'monthly' && kind === 'milestone' && bd && +bd[1] === mw.nth && P_WD.indexOf(bd[2]) === mw.wd) monthlyBy = 'weekday';
+    const u = icsDt(rr.UNTIL || '');
+    if (u) until = u.date < start ? start : u.date;
+    else if (/^\d+$/.test(rr.COUNT || '') && +rr.COUNT > 0) {
+      const all = repeatStarts({ start, kind, recurrence, interval, monthlyBy }, start, '9999-12-31', +rr.COUNT);
+      until = all[all.length - 1] || start;
+    }
+    (p._exdates || []).forEach(v => {
+      const x = icsDt(v);
+      if (x && !exceptions.some(e => e.date === x.date)) exceptions.push({ date: x.date, status: 'cancelled' });
+    });
+    exceptions.sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
+  const ev = {
     uid: get('UID').trim(),
     title: icsUnescape(get('SUMMARY')) || '(no title)',
     start, end, startAt, endAt, tz, repeatDays,
-    recurrence: /FREQ=YEARLY/i.test(get('RRULE')) ? 'yearly' : 'none',
+    recurrence, interval, monthlyBy, until, exceptions,
     status: get('STATUS').trim().toUpperCase() === 'CANCELLED' ? 'cancelled' : 'planned',
     notes: icsUnescape(get('DESCRIPTION')),
     categories: icsUnescape(get('CATEGORIES')).split(',').map(c => c.trim()).filter(Boolean)
   };
+  const rid = p['RECURRENCE-ID'] ? icsDt(p['RECURRENCE-ID'][0]) : null;
+  if (rid) ev._rid = rid.date;
+  return ev;
 }
 // Same FNV-1a hash as wheellib.stable_id, so the browser and the CLI give the same ids.
 function stableId(prefix, key) {
@@ -1043,15 +1180,41 @@ function parseCsvRows(text) {
   return rows.filter(r => r.some(f => f.trim() !== ''));
 }
 // Columns (any order, case-insensitive; the same as the CSV export): title, start, end, ring, status,
-// start time, end time, timing (daily or continuous, for several days), repeats (yearly), owner, notes.
+// start time, end time, timing (daily or continuous, for several days), repeats (see csvRepeat),
+// until (last date of a weekly or monthly repeat), owner, notes.
 // Only title and start are required. Swedish headings and status words are accepted too.
-// Returns { items: [{ line, title, start, end, ring, status, notes, owner, startTime, endTime, timing, recurrence }],
-//           warnings: [{ line, msg }] }.
+// Returns { items: [{ line, title, start, end, ring, status, notes, owner, startTime, endTime, timing,
+//           recurrence, interval, monthlyBy, until }], warnings: [{ line, msg }] }.
 const CSV_HEAD_ALIASES = {
   titel: 'title', namn: 'title', startdatum: 'start', slut: 'end', slutdatum: 'end', status: 'status',
   starttid: 'starttime', sluttid: 'endtime', tidsläge: 'timing', upprepas: 'repeats', repeat: 'repeats',
-  recurrence: 'repeats', ansvarig: 'owner', anteckningar: 'notes', note: 'notes', kommentar: 'notes'
+  recurrence: 'repeats', ansvarig: 'owner', anteckningar: 'notes', note: 'notes', kommentar: 'notes',
+  tillochmed: 'until', tom: 'until', upprepastill: 'until', repeatuntil: 'until'
 };
+// The "repeats" column: yearly; weekly or monthly; every N weeks or months; "by weekday" after a monthly
+// value means the same weekday of the month (the 2nd Tuesday). Swedish words work too
+// (varje vecka, varannan månad, var 3:e månad, på veckodag). Returns null for an unknown value.
+function csvRepeat(s) {
+  s = String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const none = { recurrence: 'none', interval: 1, monthlyBy: '' };
+  if (!s || /^(none|no|nej|does not repeat|upprepas inte)$/.test(s)) return none;
+  if (/^(yearly|every year|annually|yes|varje år|årligen|ja)$/.test(s)) return Object.assign(none, { recurrence: 'yearly' });
+  let monthlyBy = '', unit = '', n = 1, m;
+  const wd = /,? (by weekday|on weekday|på veckodag)$/.exec(s);
+  if (wd) { s = s.slice(0, wd.index); monthlyBy = 'weekday'; }
+  if (/^(weekly|every week|varje vecka|veckovis)$/.test(s)) unit = 'w';
+  else if (/^(monthly|every month|varje månad|månadsvis)$/.test(s)) unit = 'm';
+  else if ((m = /^(?:every other|varannan) (week|vecka|month|månad)$/.exec(s))) { n = 2; unit = /^(week|vecka)$/.test(m[1]) ? 'w' : 'm'; }
+  else if ((m = /^(?:every|var) (\d+)(?::?[ae])? (weeks?|veckor|vecka|months?|månader|månad)$/.exec(s))) { n = +m[1]; unit = /^(week|veck)/.test(m[2]) ? 'w' : 'm'; }
+  if (!unit || n < 1 || n > 52 || (monthlyBy && unit !== 'm')) return null;
+  return { recurrence: unit === 'w' ? 'weekly' : 'monthly', interval: n, monthlyBy };
+}
+function repeatToken(e) {
+  if (e.recurrence === 'yearly') return 'yearly';
+  if (!pIsRepeat(e)) return '';
+  const n = pInterval(e), w = e.recurrence === 'weekly';
+  return (n === 1 ? (w ? 'weekly' : 'monthly') : 'every ' + n + (w ? ' weeks' : ' months')) + (pByWeekday(e) ? ' by weekday' : '');
+}
 const CSV_STATUS = { planned: 'planned', moved: 'moved', done: 'done', cancelled: 'cancelled', canceled: 'cancelled',
   planerad: 'planned', flyttad: 'moved', klar: 'done', inställd: 'cancelled' };
 function csvToItems(text) {
@@ -1071,11 +1234,14 @@ function csvToItems(text) {
     if (!start) { warnings.push({ line, msg: 'start' }); return; }
     if (end === null || (end && end < start)) { warnings.push({ line, msg: 'end' }); return; }
     if (status && ['planned', 'moved', 'cancelled', 'done'].indexOf(status) < 0) { warnings.push({ line, msg: 'status' }); status = ''; }
-    const rep = get('repeats').toLowerCase();
-    const yearly = ['yearly', 'every year', 'annually', 'yes', 'varje år', 'årligen', 'ja'].indexOf(rep) >= 0;
-    if (rep && !yearly && ['none', 'no', 'nej', 'does not repeat', 'upprepas inte'].indexOf(rep) < 0) warnings.push({ line, msg: 'repeats' });
+    let rep = csvRepeat(get('repeats'));
+    if (!rep) { warnings.push({ line, msg: 'repeats' }); rep = csvRepeat(''); }
+    if (end && end !== start) rep.monthlyBy = ''; // the weekday of the month is for milestones
+    let until = normDate(get('until'));
+    if (until === null || (until && until < start)) { warnings.push({ line, msg: 'until' }); until = ''; }
     const item = { line, title, start, end: end || start, ring: get('ring'), status: status || 'planned', notes: get('notes'), owner: get('owner'),
-      startTime: '', endTime: '', timing: '', recurrence: yearly ? 'yearly' : 'none' };
+      startTime: '', endTime: '', timing: '', recurrence: rep.recurrence, interval: rep.interval, monthlyBy: rep.monthlyBy,
+      until: pIsRepeat(rep) ? until : '' };
     const st = get('starttime'), et = get('endtime');
     if (st || et) {
       // Several days: "timing" column says daily (same hours each day, the default) or continuous.
@@ -1093,7 +1259,7 @@ function csvToItems(text) {
 // CSV export in the same columns the import reads, so a file can go out to Excel and back.
 // Semicolon separated, UTF-8 with BOM and an Excel "sep=;" line, so Excel opens it in columns in any
 // language setting and keeps å, ä and ö.
-const CSV_COLUMNS = ['title', 'start', 'end', 'ring', 'status', 'start time', 'end time', 'timing', 'repeats', 'owner', 'notes'];
+const CSV_COLUMNS = ['title', 'start', 'end', 'ring', 'status', 'start time', 'end time', 'timing', 'repeats', 'until', 'owner', 'notes'];
 function csvCell(v) {
   v = v == null ? '' : String(v);
   return /[;",\r\n]/.test(v) || /^\s|\s$/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
@@ -1106,23 +1272,27 @@ function wheelToCsv(w) {
   return csvText([CSV_COLUMNS].concat(evs.map(e => {
     const span = e.kind === 'span' && pIsDate(e.end), times = !!(e.startTime && e.endTime);
     return [e.title, e.start, span ? e.end : '', ringName[e.ringId] || '', e.status, times ? e.startTime : '', times ? e.endTime : '',
-      span && times ? e.timing || 'daily' : '', e.recurrence === 'yearly' ? 'yearly' : '', e.owner || '', e.notes || ''];
+      span && times ? e.timing || 'daily' : '', repeatToken(e), pIsRepeat(e) && pIsDate(e.until) ? e.until : '', e.owner || '', e.notes || ''];
   })));
 }
 // A small example file showing every kind of row; ring names are examples to replace with your own.
 function csvTemplate() {
   return csvText([CSV_COLUMNS,
-    ['Budget draft', '2027-02-01', '2027-03-15', 'Department', 'planned', '', '', '', '', 'Head of department', 'A span: several whole days'],
-    ['Board meeting', '2027-04-12', '', 'Department', 'planned', '13:00', '15:00', '', '', '', 'A milestone with a time'],
-    ['Paper deadline', '2027-05-03', '', 'Research', 'planned', '', '', '', '', 'PhD student', 'A milestone: one whole day'],
-    ['Course week', '2027-03-02', '2027-03-04', 'Education', 'planned', '09:00', '16:00', 'daily', '', '', 'Same hours each day'],
-    ['Writing retreat', '2027-05-10', '2027-05-12', 'Research', 'planned', '12:00', '12:00', 'continuous', '', '', 'Lunch to lunch'],
-    ['Annual report due', '2027-02-26', '', 'Department', 'planned', '', '', '', 'yearly', '', 'Repeats every year']]);
+    ['Budget draft', '2027-02-01', '2027-03-15', 'Department', 'planned', '', '', '', '', '', 'Head of department', 'A span: several whole days'],
+    ['Board meeting', '2027-04-12', '', 'Department', 'planned', '13:00', '15:00', '', '', '', '', 'A milestone with a time'],
+    ['Paper deadline', '2027-05-03', '', 'Research', 'planned', '', '', '', '', '', 'PhD student', 'A milestone: one whole day'],
+    ['Course week', '2027-03-02', '2027-03-04', 'Education', 'planned', '09:00', '16:00', 'daily', '', '', '', 'Same hours each day'],
+    ['Writing retreat', '2027-05-10', '2027-05-12', 'Research', 'planned', '12:00', '12:00', 'continuous', '', '', '', 'Lunch to lunch'],
+    ['Annual report due', '2027-02-26', '', 'Department', 'planned', '', '', '', 'yearly', '', '', 'Repeats every year'],
+    ['Research group meeting', '2027-01-12', '', 'Research', 'planned', '10:00', '11:00', '', 'monthly by weekday', '2027-06-30', '', 'The 2nd Tuesday of every month until June'],
+    ['Department meeting', '2027-01-20', '', 'Department', 'planned', '14:00', '15:30', '', 'every 2 months', '', 'Head of department', 'Every second month']]);
 }
 
 // iCalendar export: whole-day events as all-day entries (DTEND exclusive); milestones with times as
 // timed entries in UTC (converted from the wheel's zone, so every recipient sees the right local time);
-// yearly RRULE; CATEGORIES = ring name.
+// yearly RRULE; CATEGORIES = ring name. Weekly and monthly repeats with times are written in the
+// wheel's zone (TZID with a VTIMEZONE), so a 09:00 meeting stays at 09:00 after a daylight saving
+// change; cancelled single meetings are EXDATEs and moved ones are entries with RECURRENCE-ID.
 function icsEscape(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
 function icsFold(line) {
   const enc = new TextEncoder(), out = [];
@@ -1135,52 +1305,97 @@ function icsFold(line) {
   out.push(cur);
   return out.join('\r\n ');
 }
+// VTIMEZONE for an IANA zone, worked out with Intl: the offsets and the daylight saving switches found
+// in `year`, written as yearly rules on the nth (or last) weekday of the month.
+function icsVtimezone(tz, year) {
+  const off = ms => tzOffsetMin(tz, ms);
+  const fo = m => (m < 0 ? '-' : '+') + String(Math.floor(Math.abs(m) / 60)).padStart(2, '0') + String(Math.abs(m) % 60).padStart(2, '0');
+  const switches = [];
+  let prev = off(Date.UTC(year, 0, 1, 12));
+  for (let d = 1; d <= 366; d++) {
+    const ms = Date.UTC(year, 0, 1 + d, 12), o = off(ms);
+    if (o === prev) continue;
+    let lo = ms - 86400000, hi = ms;
+    while (hi - lo > 60000) { const mid = lo + Math.floor((hi - lo) / 120000) * 60000; if (off(mid) === prev) lo = mid; else hi = mid; }
+    switches.push({ at: hi, from: prev, to: o });
+    prev = o;
+  }
+  const L = ['BEGIN:VTIMEZONE', 'TZID:' + tz];
+  if (!switches.length) L.push('BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:' + fo(prev), 'TZOFFSETTO:' + fo(prev), 'END:STANDARD');
+  switches.forEach(s => {
+    const wall = pFmt(s.at + s.from * 60000), day = wall.slice(0, 10), m0 = +day.slice(5, 7) - 1, mw = pMonthWeek(day);
+    const nth = +day.slice(8) + 7 > pDim(+day.slice(0, 4), m0) ? -1 : mw.nth, type = s.to > s.from ? 'DAYLIGHT' : 'STANDARD';
+    L.push('BEGIN:' + type, 'DTSTART:1970' + day.slice(5, 7) + String(pNthWeekday(1970, m0, mw.wd, nth)).padStart(2, '0') + 'T' + wall.slice(11).replace(':', '') + '00',
+      'TZOFFSETFROM:' + fo(s.from), 'TZOFFSETTO:' + fo(s.to), 'RRULE:FREQ=YEARLY;BYMONTH=' + (m0 + 1) + ';BYDAY=' + nth + P_WD[mw.wd], 'END:' + type);
+  });
+  L.push('END:VTIMEZONE');
+  return L;
+}
 function wheelToIcs(w, stamp, tz, ownerLabel) {
   ownerLabel = ownerLabel || 'Owner';
   const ringName = {};
   w.rings.forEach(r => { ringName[r.id] = r.name; });
   const utc = ms => pFmt(ms).replace(/[-:]/g, '') + '00Z';
   const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Year Wheel//EN', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:' + icsEscape(w.title)];
+  const V = [];
+  let tzYear = 0;
   const timed = (d, t) => utc(zonedToUtc(d, t, tz));
+  const days = (a, b) => Math.round((pMs(b) - pMs(a)) / 86400000);
   w.events.forEach(e => {
     const span = e.kind === 'span' && pIsDate(e.end), hasTimes = !!(e.startTime && e.endTime);
-    const yearly = e.recurrence === 'yearly';
-    // Each entry: [uid, DTSTART/DTEND lines, RRULE or ''].
-    let entries;
-    if (hasTimes && !span) {
-      entries = [[e.id, ['DTSTART:' + timed(e.start, e.startTime), 'DTEND:' + timed(e.start, e.endTime)], '']];
-    } else if (hasTimes && e.timing === 'continuous') {
-      entries = [[e.id, ['DTSTART:' + timed(e.start, e.startTime), 'DTEND:' + timed(e.end, e.endTime)], '']];
-    } else if (hasTimes && e.timing === 'daily') {
-      const n = Math.round((pMs(e.end) - pMs(e.start)) / 86400000) + 1;
-      const day = k => { const d = pAddDays(e.start, k); return ['DTSTART:' + timed(d, e.startTime), 'DTEND:' + timed(d, e.endTime)]; };
-      // One entry repeating daily; a yearly one cannot also repeat daily, so it becomes one entry per day.
-      entries = yearly ? Array.from({ length: n }, (_, k) => [e.id + '-d' + (k + 1), day(k), ''])
-        : [[e.id, day(0), 'RRULE:FREQ=DAILY;COUNT=' + n]];
-    } else {
-      const last = span ? e.end : e.start;
-      entries = [[e.id, ['DTSTART;VALUE=DATE:' + e.start.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + pAddDays(last, 1).replace(/-/g, '')], '']];
-    }
+    const yearly = e.recurrence === 'yearly', rep = pIsRepeat(e), len = span ? days(e.start, e.end) : 0;
+    const daily = hasTimes && span && e.timing === 'daily';
+    // Weekly and monthly meetings keep their local time (TZID); everything else is written in UTC.
+    const zoned = rep && hasTimes && tz !== 'UTC';
+    if (zoned && !tzYear) tzYear = +e.start.slice(0, 4);
+    const at = (d, t) => (zoned ? ';TZID=' + tz + ':' + d.replace(/-/g, '') + 'T' + t.replace(':', '') + '00' : ':' + timed(d, t));
+    // DTSTART and DTEND of one entry from day s to day en (a daily span's entries are one day each).
+    const dates = (s, en) => {
+      if (hasTimes && (!span || daily)) return ['DTSTART' + at(s, e.startTime), 'DTEND' + at(s, e.endTime)];
+      if (hasTimes) return ['DTSTART' + at(s, e.startTime), 'DTEND' + at(en, e.endTime)];
+      return ['DTSTART;VALUE=DATE:' + s.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + pAddDays(en, 1).replace(/-/g, '')];
+    };
+    // Entries [uid, day offset]: a daily span that also repeats becomes one entry per day.
+    const entries = daily && (yearly || rep) ? Array.from({ length: len + 1 }, (_, k) => [e.id + '-d' + (k + 1), k]) : [[e.id, 0]];
+    const rule = k => {
+      if (yearly) return 'RRULE:FREQ=YEARLY';
+      if (daily && !rep) return 'RRULE:FREQ=DAILY;COUNT=' + (len + 1);
+      if (!rep) return '';
+      const r = ['FREQ=' + e.recurrence.toUpperCase()];
+      if (pInterval(e) > 1) r.push('INTERVAL=' + pInterval(e));
+      if (pByWeekday(e)) { const mw = pMonthWeek(e.start); r.push('BYDAY=' + mw.nth + P_WD[mw.wd]); }
+      if (pIsDate(e.until)) { const u = pAddDays(e.until, k); r.push('UNTIL=' + (hasTimes ? timed(u, '23:59') : u.replace(/-/g, ''))); }
+      return 'RRULE:' + r.join(';');
+    };
+    const ex = rep ? (e.exceptions || []).filter(x => x && isRepeatStart(e, x.date) && (x.status === 'cancelled' || (x.status === 'moved' && pIsDate(x.start)))) : [];
     const desc = [e.notes, e.owner ? ownerLabel + ': ' + e.owner : ''].filter(Boolean).join('\n');
-    entries.forEach(([uid, dates, rrule]) => {
-      L.push('BEGIN:VEVENT', 'UID:' + uid + '@yearwheel', 'DTSTAMP:' + stamp);
-      L.push(...dates, 'SUMMARY:' + icsEscape(e.title));
-      if (desc) L.push('DESCRIPTION:' + icsEscape(desc));
-      if (ringName[e.ringId]) L.push('CATEGORIES:' + icsEscape(ringName[e.ringId]));
-      L.push('STATUS:' + (e.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'));
-      if (rrule) L.push(rrule);
-      if (yearly) L.push('RRULE:FREQ=YEARLY');
-      L.push('END:VEVENT');
+    const vevent = (uid, lines, tail) => {
+      V.push('BEGIN:VEVENT', 'UID:' + uid + '@yearwheel', 'DTSTAMP:' + stamp, ...lines, 'SUMMARY:' + icsEscape(e.title));
+      if (desc) V.push('DESCRIPTION:' + icsEscape(desc));
+      if (ringName[e.ringId]) V.push('CATEGORIES:' + icsEscape(ringName[e.ringId]));
+      V.push('STATUS:' + (e.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'), ...tail, 'END:VEVENT');
+    };
+    entries.forEach(([uid, k]) => {
+      const first = pAddDays(e.start, k), dt = (s, en) => dates(s, daily ? s : en);
+      const tail = [rule(k)].filter(Boolean), moved = [];
+      ex.forEach(x => {
+        const orig = pAddDays(x.date, k), newLen = x.status === 'moved' && span && pIsDate(x.end) && x.end >= x.start ? days(x.start, x.end) : len;
+        if (x.status === 'moved' && (!daily || k <= newLen)) moved.push([orig, pAddDays(x.start, k), pAddDays(x.start, newLen)]);
+        else tail.push(dt(orig, orig)[0].replace(/^DTSTART/, 'EXDATE'));
+      });
+      vevent(uid, dt(first, span ? e.end : e.start), tail);
+      moved.forEach(([orig, s, en]) => vevent(uid, [dt(orig, orig)[0].replace(/^DTSTART/, 'RECURRENCE-ID')].concat(dt(s, en)), []));
     });
   });
-  L.push('END:VCALENDAR');
+  if (tzYear) L.push(...icsVtimezone(tz, tzYear));
+  L.push(...V, 'END:VCALENDAR');
   return L.map(icsFold).join('\r\n') + '\r\n';
 }
 /*PARSERS-END*/
 
 /* ============================================================ TEMPLATES
    Generated by tools/build_templates.py. Do not edit by hand. */
-const TEMPLATES = /*TEMPLATES-BEGIN*/[{"id": "blank", "label": {"en": "Blank", "sv": "Tom"}, "wheel": {"en": {"schemaVersion": 1, "id": "blank", "title": "My year wheel", "owner": "", "template": "blank", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "research", "name": "Research", "color": "#0072B2", "order": 0}, {"id": "education", "name": "Education", "color": "#E69F00", "order": 1}, {"id": "admin", "name": "Admin", "color": "#009E73", "order": 2}], "events": [], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "blank", "title": "Mitt årshjul", "owner": "", "template": "blank", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "research", "name": "Forskning", "color": "#0072B2", "order": 0}, {"id": "education", "name": "Utbildning", "color": "#E69F00", "order": 1}, {"id": "admin", "name": "Administration", "color": "#009E73", "order": 2}], "events": [], "reviews": [], "changelog": []}}}, {"id": "research-team", "label": {"en": "Research team", "sv": "Forskargrupp"}, "wheel": {"en": {"schemaVersion": 1, "id": "research-team", "title": "Research team year wheel", "owner": "", "template": "research-team", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "projects", "name": "Projects", "color": "#0072B2", "order": 0}, {"id": "funding", "name": "Funding calls", "color": "#E69F00", "order": 1}, {"id": "dissemination", "name": "Conferences and papers", "color": "#009E73", "order": 2}, {"id": "team", "name": "Team", "color": "#CC79A7", "order": 3}], "events": [{"id": "proj-a-wp2", "ringId": "projects", "title": "Project A, work package 2 (edit me)", "kind": "span", "start": "2027-02-01", "end": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-a-deliv", "ringId": "projects", "title": "Project A deliverable D2.1 (edit me)", "kind": "milestone", "start": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-b-campaign", "ringId": "projects", "title": "Project B measurement campaign (edit me)", "kind": "span", "start": "2027-09-06", "end": "2027-11-26", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-b-report", "ringId": "projects", "title": "Project B annual report (edit me)", "kind": "milestone", "start": "2027-12-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-national", "ringId": "funding", "title": "National research council call (edit me)", "kind": "milestone", "start": "2027-03-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-eu", "ringId": "funding", "title": "EU call deadline (edit me)", "kind": "milestone", "start": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-prep", "ringId": "funding", "title": "Proposal writing (edit me)", "kind": "span", "start": "2027-08-16", "end": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conf-abstract", "ringId": "dissemination", "title": "Conference abstract deadline (edit me)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conf-main", "ringId": "dissemination", "title": "Main conference (edit me)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-submit", "ringId": "dissemination", "title": "Journal paper submission (edit me)", "kind": "milestone", "start": "2027-04-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-summer", "ringId": "team", "title": "Summer break (edit me)", "kind": "span", "start": "2027-07-01", "end": "2027-08-06", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-kickoff", "ringId": "team", "title": "Group kick-off day (edit me)", "kind": "milestone", "start": "2027-08-23", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-dev-talks", "ringId": "team", "title": "Development talks (edit me)", "kind": "milestone", "start": "2027-11-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "research-team", "title": "Forskargruppens årshjul", "owner": "", "template": "research-team", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "projects", "name": "Projekt", "color": "#0072B2", "order": 0}, {"id": "funding", "name": "Utlysningar", "color": "#E69F00", "order": 1}, {"id": "dissemination", "name": "Konferenser och artiklar", "color": "#009E73", "order": 2}, {"id": "team", "name": "Gruppen", "color": "#CC79A7", "order": 3}], "events": [{"id": "proj-a-wp2", "ringId": "projects", "title": "Projekt A, arbetspaket 2 (ändra mig)", "kind": "span", "start": "2027-02-01", "end": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-a-deliv", "ringId": "projects", "title": "Projekt A, leverans D2.1 (ändra mig)", "kind": "milestone", "start": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-b-campaign", "ringId": "projects", "title": "Projekt B, mätkampanj (ändra mig)", "kind": "span", "start": "2027-09-06", "end": "2027-11-26", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-b-report", "ringId": "projects", "title": "Projekt B, årsrapport (ändra mig)", "kind": "milestone", "start": "2027-12-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-national", "ringId": "funding", "title": "Utlysning från nationellt forskningsråd (ändra mig)", "kind": "milestone", "start": "2027-03-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-eu", "ringId": "funding", "title": "Sista dag för EU-utlysning (ändra mig)", "kind": "milestone", "start": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-prep", "ringId": "funding", "title": "Ansökningsskrivande (ändra mig)", "kind": "span", "start": "2027-08-16", "end": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conf-abstract", "ringId": "dissemination", "title": "Sista dag för konferensabstrakt (ändra mig)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conf-main", "ringId": "dissemination", "title": "Huvudkonferens (ändra mig)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-submit", "ringId": "dissemination", "title": "Tidskriftsartikel inskickad (ändra mig)", "kind": "milestone", "start": "2027-04-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-summer", "ringId": "team", "title": "Sommaruppehåll (ändra mig)", "kind": "span", "start": "2027-07-01", "end": "2027-08-06", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-kickoff", "ringId": "team", "title": "Gruppens uppstartsdag (ändra mig)", "kind": "milestone", "start": "2027-08-23", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-dev-talks", "ringId": "team", "title": "Utvecklingssamtal (ändra mig)", "kind": "milestone", "start": "2027-11-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "department-admin", "label": {"en": "Department or unit admin", "sv": "Institution eller enhet, administration"}, "wheel": {"en": {"schemaVersion": 1, "id": "department-admin", "title": "Department admin year", "owner": "", "template": "department-admin", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "board", "name": "Board and meetings", "color": "#0072B2", "order": 0}, {"id": "budget", "name": "Budget and finance", "color": "#E69F00", "order": 1}, {"id": "reporting", "name": "Reporting", "color": "#009E73", "order": 2}, {"id": "staff", "name": "Staff and HR", "color": "#CC79A7", "order": 3}], "events": [{"id": "board-feb", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-apr", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-04-21", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-sep", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-09-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-nov", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "budget-draft", "ringId": "budget", "title": "Budget draft for next year (edit me)", "kind": "span", "start": "2027-08-23", "end": "2027-10-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "budget-decision", "ringId": "budget", "title": "Budget decision (edit me)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "tertial-1", "ringId": "budget", "title": "Financial follow-up 1 (edit me)", "kind": "milestone", "start": "2027-05-12", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "tertial-2", "ringId": "budget", "title": "Financial follow-up 2 (edit me)", "kind": "milestone", "start": "2027-09-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "annual-report", "ringId": "reporting", "title": "Annual report writing (edit me)", "kind": "span", "start": "2027-01-11", "end": "2027-02-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "annual-report-due", "ringId": "reporting", "title": "Annual report due (edit me)", "kind": "milestone", "start": "2027-02-26", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "ops-plan", "ringId": "reporting", "title": "Operational plan due (edit me)", "kind": "milestone", "start": "2027-12-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "appraisals", "ringId": "staff", "title": "Performance reviews (edit me)", "kind": "span", "start": "2027-03-01", "end": "2027-04-16", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "salary-review", "ringId": "staff", "title": "Salary review (edit me)", "kind": "milestone", "start": "2027-10-01", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "staff-day", "ringId": "staff", "title": "Staff day (edit me)", "kind": "milestone", "start": "2027-08-26", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "department-admin", "title": "Institutionens administrativa år", "owner": "", "template": "department-admin", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "board", "name": "Styrelse och möten", "color": "#0072B2", "order": 0}, {"id": "budget", "name": "Budget och ekonomi", "color": "#E69F00", "order": 1}, {"id": "reporting", "name": "Rapportering", "color": "#009E73", "order": 2}, {"id": "staff", "name": "Personal och HR", "color": "#CC79A7", "order": 3}], "events": [{"id": "board-feb", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-apr", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-04-21", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-sep", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-09-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-nov", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "budget-draft", "ringId": "budget", "title": "Budgetförslag för nästa år (ändra mig)", "kind": "span", "start": "2027-08-23", "end": "2027-10-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "budget-decision", "ringId": "budget", "title": "Budgetbeslut (ändra mig)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "tertial-1", "ringId": "budget", "title": "Ekonomisk uppföljning 1 (ändra mig)", "kind": "milestone", "start": "2027-05-12", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "tertial-2", "ringId": "budget", "title": "Ekonomisk uppföljning 2 (ändra mig)", "kind": "milestone", "start": "2027-09-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "annual-report", "ringId": "reporting", "title": "Arbete med årsredovisning (ändra mig)", "kind": "span", "start": "2027-01-11", "end": "2027-02-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "annual-report-due", "ringId": "reporting", "title": "Årsredovisning klar (ändra mig)", "kind": "milestone", "start": "2027-02-26", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "ops-plan", "ringId": "reporting", "title": "Verksamhetsplan klar (ändra mig)", "kind": "milestone", "start": "2027-12-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "appraisals", "ringId": "staff", "title": "Medarbetarsamtal (ändra mig)", "kind": "span", "start": "2027-03-01", "end": "2027-04-16", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "salary-review", "ringId": "staff", "title": "Lönerevision (ändra mig)", "kind": "milestone", "start": "2027-10-01", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "staff-day", "ringId": "staff", "title": "Personaldag (ändra mig)", "kind": "milestone", "start": "2027-08-26", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "lab-maintenance", "label": {"en": "Lab maintenance and calibration", "sv": "Labbunderhåll och kalibrering"}, "wheel": {"en": {"schemaVersion": 1, "id": "lab-maintenance", "title": "Lab maintenance and calibration", "owner": "", "template": "lab-maintenance", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "calibration", "name": "Calibration", "color": "#0072B2", "order": 0}, {"id": "maintenance", "name": "Maintenance", "color": "#E69F00", "order": 1}, {"id": "service", "name": "Service visits", "color": "#009E73", "order": 2}, {"id": "safety", "name": "Safety", "color": "#CC79A7", "order": 3}], "events": [{"id": "cal-cmm", "ringId": "calibration", "title": "CMM calibration (edit me)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-interferometer", "ringId": "calibration", "title": "Interferometer calibration (edit me)", "kind": "milestone", "start": "2027-04-12", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-roughness-1", "ringId": "calibration", "title": "Roughness standard check (edit me)", "kind": "milestone", "start": "2027-03-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-roughness-2", "ringId": "calibration", "title": "Roughness standard check (edit me)", "kind": "milestone", "start": "2027-09-06", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-gauge-blocks", "ringId": "calibration", "title": "Gauge block verification (edit me)", "kind": "milestone", "start": "2027-10-18", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-summer", "ringId": "maintenance", "title": "Preventive maintenance, all instruments (edit me)", "kind": "span", "start": "2027-07-05", "end": "2027-07-23", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-winter", "ringId": "maintenance", "title": "Preventive maintenance, all instruments (edit me)", "kind": "span", "start": "2027-12-13", "end": "2027-12-22", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-filters", "ringId": "maintenance", "title": "Air filter and climate check (edit me)", "kind": "milestone", "start": "2027-05-17", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "svc-cmm", "ringId": "service", "title": "CMM vendor service visit (edit me)", "kind": "span", "start": "2027-02-08", "end": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "svc-microscope", "ringId": "service", "title": "Optical profilometer service (edit me)", "kind": "milestone", "start": "2027-11-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-inspection", "ringId": "safety", "title": "Lab safety inspection (edit me)", "kind": "milestone", "start": "2027-03-22", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-chemicals", "ringId": "safety", "title": "Chemical inventory (edit me)", "kind": "milestone", "start": "2027-09-27", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-training", "ringId": "safety", "title": "Safety training for new users (edit me)", "kind": "milestone", "start": "2027-09-02", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "lab-maintenance", "title": "Labbunderhåll och kalibrering", "owner": "", "template": "lab-maintenance", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "calibration", "name": "Kalibrering", "color": "#0072B2", "order": 0}, {"id": "maintenance", "name": "Underhåll", "color": "#E69F00", "order": 1}, {"id": "service", "name": "Servicebesök", "color": "#009E73", "order": 2}, {"id": "safety", "name": "Säkerhet", "color": "#CC79A7", "order": 3}], "events": [{"id": "cal-cmm", "ringId": "calibration", "title": "Kalibrering av koordinatmätmaskin (CMM) (ändra mig)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-interferometer", "ringId": "calibration", "title": "Kalibrering av interferometer (ändra mig)", "kind": "milestone", "start": "2027-04-12", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-roughness-1", "ringId": "calibration", "title": "Kontroll av ytjämnhetsnormal (ändra mig)", "kind": "milestone", "start": "2027-03-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-roughness-2", "ringId": "calibration", "title": "Kontroll av ytjämnhetsnormal (ändra mig)", "kind": "milestone", "start": "2027-09-06", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-gauge-blocks", "ringId": "calibration", "title": "Verifiering av passbitar (ändra mig)", "kind": "milestone", "start": "2027-10-18", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-summer", "ringId": "maintenance", "title": "Förebyggande underhåll, alla instrument (ändra mig)", "kind": "span", "start": "2027-07-05", "end": "2027-07-23", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-winter", "ringId": "maintenance", "title": "Förebyggande underhåll, alla instrument (ändra mig)", "kind": "span", "start": "2027-12-13", "end": "2027-12-22", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-filters", "ringId": "maintenance", "title": "Kontroll av luftfilter och klimat (ändra mig)", "kind": "milestone", "start": "2027-05-17", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "svc-cmm", "ringId": "service", "title": "Servicebesök från CMM-leverantören (ändra mig)", "kind": "span", "start": "2027-02-08", "end": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "svc-microscope", "ringId": "service", "title": "Service av optisk profilometer (ändra mig)", "kind": "milestone", "start": "2027-11-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-inspection", "ringId": "safety", "title": "Säkerhetsrond i labbet (ändra mig)", "kind": "milestone", "start": "2027-03-22", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-chemicals", "ringId": "safety", "title": "Kemikalieinventering (ändra mig)", "kind": "milestone", "start": "2027-09-27", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-training", "ringId": "safety", "title": "Säkerhetsutbildning för nya användare (ändra mig)", "kind": "milestone", "start": "2027-09-02", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "phd-journey", "label": {"en": "PhD journey (4 years)", "sv": "Doktorandresan (4 år)"}, "wheel": {"en": {"schemaVersion": 1, "id": "phd-journey", "title": "PhD journey", "owner": "", "template": "phd-journey", "yearStart": "2026-08-31", "years": 4, "settings": {"language": "en", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "milestones", "name": "Milestones", "color": "#0072B2", "order": 0}, {"id": "courses", "name": "Courses", "color": "#E69F00", "order": 1}, {"id": "papers", "name": "Papers and conferences", "color": "#009E73", "order": 2}, {"id": "teaching", "name": "Teaching", "color": "#CC79A7", "order": 3}], "events": [{"id": "phd-start", "ringId": "milestones", "title": "Start of doctoral studies (edit me)", "kind": "milestone", "start": "2026-09-01", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "isp-update", "ringId": "milestones", "title": "Individual study plan (ISP) update (edit me)", "kind": "milestone", "start": "2026-11-16", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "isp-first", "ringId": "milestones", "title": "First ISP approved (edit me)", "kind": "milestone", "start": "2026-12-14", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "lic-seminar", "ringId": "milestones", "title": "Licentiate seminar (if applicable) (edit me)", "kind": "milestone", "start": "2028-12-08", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "final-seminar", "ringId": "milestones", "title": "Final seminar (edit me)", "kind": "milestone", "start": "2030-03-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "defence", "ringId": "milestones", "title": "Thesis defence (edit me)", "kind": "milestone", "start": "2030-06-05", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-methods", "ringId": "courses", "title": "Research methods course (edit me)", "kind": "span", "start": "2026-09-07", "end": "2026-10-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-ethics", "ringId": "courses", "title": "Research ethics course (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-field", "ringId": "courses", "title": "Advanced course in your field (edit me)", "kind": "span", "start": "2027-09-06", "end": "2027-12-17", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-teaching", "ringId": "courses", "title": "Teaching and learning in higher education (edit me)", "kind": "span", "start": "2028-01-17", "end": "2028-03-17", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-1", "ringId": "papers", "title": "Paper 1 submitted (edit me)", "kind": "milestone", "start": "2027-06-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-2", "ringId": "papers", "title": "Paper 2 submitted (edit me)", "kind": "milestone", "start": "2028-05-31", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-3", "ringId": "papers", "title": "Paper 3 submitted (edit me)", "kind": "milestone", "start": "2029-04-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conference", "ringId": "papers", "title": "Annual conference (edit me)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "thesis-writing", "ringId": "papers", "title": "Thesis writing (edit me)", "kind": "span", "start": "2029-09-01", "end": "2030-02-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "teaching-lab", "ringId": "teaching", "title": "Lab supervision (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "phd-journey", "title": "Doktorandresan", "owner": "", "template": "phd-journey", "yearStart": "2026-08-31", "years": 4, "settings": {"language": "sv", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "milestones", "name": "Milstolpar", "color": "#0072B2", "order": 0}, {"id": "courses", "name": "Kurser", "color": "#E69F00", "order": 1}, {"id": "papers", "name": "Artiklar och konferenser", "color": "#009E73", "order": 2}, {"id": "teaching", "name": "Undervisning", "color": "#CC79A7", "order": 3}], "events": [{"id": "phd-start", "ringId": "milestones", "title": "Start av forskarutbildningen (ändra mig)", "kind": "milestone", "start": "2026-09-01", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "isp-update", "ringId": "milestones", "title": "Uppdatering av individuell studieplan (ISP) (ändra mig)", "kind": "milestone", "start": "2026-11-16", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "isp-first", "ringId": "milestones", "title": "Första ISP fastställd (ändra mig)", "kind": "milestone", "start": "2026-12-14", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "lic-seminar", "ringId": "milestones", "title": "Licentiatseminarium (om aktuellt) (ändra mig)", "kind": "milestone", "start": "2028-12-08", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "final-seminar", "ringId": "milestones", "title": "Slutseminarium (ändra mig)", "kind": "milestone", "start": "2030-03-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "defence", "ringId": "milestones", "title": "Disputation (ändra mig)", "kind": "milestone", "start": "2030-06-05", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-methods", "ringId": "courses", "title": "Kurs i forskningsmetodik (ändra mig)", "kind": "span", "start": "2026-09-07", "end": "2026-10-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-ethics", "ringId": "courses", "title": "Kurs i forskningsetik (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-field", "ringId": "courses", "title": "Fördjupningskurs inom ditt område (ändra mig)", "kind": "span", "start": "2027-09-06", "end": "2027-12-17", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-teaching", "ringId": "courses", "title": "Högskolepedagogik (ändra mig)", "kind": "span", "start": "2028-01-17", "end": "2028-03-17", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-1", "ringId": "papers", "title": "Artikel 1 inskickad (ändra mig)", "kind": "milestone", "start": "2027-06-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-2", "ringId": "papers", "title": "Artikel 2 inskickad (ändra mig)", "kind": "milestone", "start": "2028-05-31", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-3", "ringId": "papers", "title": "Artikel 3 inskickad (ändra mig)", "kind": "milestone", "start": "2029-04-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conference", "ringId": "papers", "title": "Årlig konferens (ändra mig)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "thesis-writing", "ringId": "papers", "title": "Avhandlingsskrivande (ändra mig)", "kind": "span", "start": "2029-09-01", "end": "2030-02-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "teaching-lab", "ringId": "teaching", "title": "Labbhandledning (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "course-periods", "label": {"en": "Course periods", "sv": "Läsperioder och kurser"}, "wheel": {"en": {"schemaVersion": 1, "id": "course-periods", "title": "Course periods", "owner": "", "template": "course-periods", "yearStart": "2026-08-31", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "teaching", "name": "Courses I teach", "color": "#0072B2", "order": 0}, {"id": "taking", "name": "Courses I take", "color": "#E69F00", "order": 1}, {"id": "exams", "name": "Exams", "color": "#009E73", "order": 2}, {"id": "planning", "name": "Course planning", "color": "#CC79A7", "order": 3}], "events": [{"id": "teach-p1", "ringId": "teaching", "title": "Course A (teaching) (edit me)", "kind": "span", "start": "2026-08-31", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "teach-p3", "ringId": "teaching", "title": "Course B (teaching) (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "take-p2", "ringId": "taking", "title": "Course C (studying) (edit me)", "kind": "span", "start": "2026-11-02", "end": "2027-01-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "take-p4", "ringId": "taking", "title": "Course D (studying) (edit me)", "kind": "span", "start": "2027-03-22", "end": "2027-06-04", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p1", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2026-10-26", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p2", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-01-11", "end": "2027-01-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p3", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-03-15", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p4", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-05-31", "end": "2027-06-04", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "reexam", "ringId": "exams", "title": "Re-exam period (edit me)", "kind": "span", "start": "2027-08-16", "end": "2027-08-27", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-eval", "ringId": "planning", "title": "Course evaluation report (edit me)", "kind": "milestone", "start": "2026-11-20", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "syllabus", "ringId": "planning", "title": "Syllabus changes due (edit me)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "schedule", "ringId": "planning", "title": "Schedule requests for next year (edit me)", "kind": "milestone", "start": "2027-04-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "course-periods", "title": "Läsperioder och kurser", "owner": "", "template": "course-periods", "yearStart": "2026-08-31", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "teaching", "name": "Kurser jag undervisar i", "color": "#0072B2", "order": 0}, {"id": "taking", "name": "Kurser jag läser", "color": "#E69F00", "order": 1}, {"id": "exams", "name": "Tentor", "color": "#009E73", "order": 2}, {"id": "planning", "name": "Kursplanering", "color": "#CC79A7", "order": 3}], "events": [{"id": "teach-p1", "ringId": "teaching", "title": "Kurs A (undervisning) (ändra mig)", "kind": "span", "start": "2026-08-31", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "teach-p3", "ringId": "teaching", "title": "Kurs B (undervisning) (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "take-p2", "ringId": "taking", "title": "Kurs C (studier) (ändra mig)", "kind": "span", "start": "2026-11-02", "end": "2027-01-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "take-p4", "ringId": "taking", "title": "Kurs D (studier) (ändra mig)", "kind": "span", "start": "2027-03-22", "end": "2027-06-04", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p1", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2026-10-26", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p2", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-01-11", "end": "2027-01-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p3", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-03-15", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p4", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-05-31", "end": "2027-06-04", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "reexam", "ringId": "exams", "title": "Omtentaperiod (ändra mig)", "kind": "span", "start": "2027-08-16", "end": "2027-08-27", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-eval", "ringId": "planning", "title": "Kursvärderingsrapport (ändra mig)", "kind": "milestone", "start": "2026-11-20", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "syllabus", "ringId": "planning", "title": "Ändringar i kursplan klara (ändra mig)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "schedule", "ringId": "planning", "title": "Schemaönskemål för nästa år (ändra mig)", "kind": "milestone", "start": "2027-04-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}]/*TEMPLATES-END*/;
+const TEMPLATES = /*TEMPLATES-BEGIN*/[{"id": "blank", "label": {"en": "Blank", "sv": "Tom"}, "wheel": {"en": {"schemaVersion": 1, "id": "blank", "title": "My year wheel", "owner": "", "template": "blank", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "research", "name": "Research", "color": "#0072B2", "order": 0}, {"id": "education", "name": "Education", "color": "#E69F00", "order": 1}, {"id": "admin", "name": "Admin", "color": "#009E73", "order": 2}], "events": [], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "blank", "title": "Mitt årshjul", "owner": "", "template": "blank", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "research", "name": "Forskning", "color": "#0072B2", "order": 0}, {"id": "education", "name": "Utbildning", "color": "#E69F00", "order": 1}, {"id": "admin", "name": "Administration", "color": "#009E73", "order": 2}], "events": [], "reviews": [], "changelog": []}}}, {"id": "research-team", "label": {"en": "Research team", "sv": "Forskargrupp"}, "wheel": {"en": {"schemaVersion": 1, "id": "research-team", "title": "Research team year wheel", "owner": "", "template": "research-team", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "projects", "name": "Projects", "color": "#0072B2", "order": 0}, {"id": "funding", "name": "Funding calls", "color": "#E69F00", "order": 1}, {"id": "dissemination", "name": "Conferences and papers", "color": "#009E73", "order": 2}, {"id": "team", "name": "Team", "color": "#CC79A7", "order": 3}], "events": [{"id": "proj-a-wp2", "ringId": "projects", "title": "Project A, work package 2 (edit me)", "kind": "span", "start": "2027-02-01", "end": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-a-deliv", "ringId": "projects", "title": "Project A deliverable D2.1 (edit me)", "kind": "milestone", "start": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-b-campaign", "ringId": "projects", "title": "Project B measurement campaign (edit me)", "kind": "span", "start": "2027-09-06", "end": "2027-11-26", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "proj-b-report", "ringId": "projects", "title": "Project B annual report (edit me)", "kind": "milestone", "start": "2027-12-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-national", "ringId": "funding", "title": "National research council call (edit me)", "kind": "milestone", "start": "2027-03-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-eu", "ringId": "funding", "title": "EU call deadline (edit me)", "kind": "milestone", "start": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "call-prep", "ringId": "funding", "title": "Proposal writing (edit me)", "kind": "span", "start": "2027-08-16", "end": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conf-abstract", "ringId": "dissemination", "title": "Conference abstract deadline (edit me)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conf-main", "ringId": "dissemination", "title": "Main conference (edit me)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-submit", "ringId": "dissemination", "title": "Journal paper submission (edit me)", "kind": "milestone", "start": "2027-04-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-summer", "ringId": "team", "title": "Summer break (edit me)", "kind": "span", "start": "2027-07-01", "end": "2027-08-06", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-kickoff", "ringId": "team", "title": "Group kick-off day (edit me)", "kind": "milestone", "start": "2027-08-23", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-dev-talks", "ringId": "team", "title": "Development talks (edit me)", "kind": "milestone", "start": "2027-11-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "team-meeting", "ringId": "team", "title": "Research group meeting (edit me)", "kind": "milestone", "start": "2027-01-12", "status": "planned", "recurrence": "monthly", "monthlyBy": "weekday", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "research-team", "title": "Forskargruppens årshjul", "owner": "", "template": "research-team", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "projects", "name": "Projekt", "color": "#0072B2", "order": 0}, {"id": "funding", "name": "Utlysningar", "color": "#E69F00", "order": 1}, {"id": "dissemination", "name": "Konferenser och artiklar", "color": "#009E73", "order": 2}, {"id": "team", "name": "Gruppen", "color": "#CC79A7", "order": 3}], "events": [{"id": "proj-a-wp2", "ringId": "projects", "title": "Projekt A, arbetspaket 2 (ändra mig)", "kind": "span", "start": "2027-02-01", "end": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-a-deliv", "ringId": "projects", "title": "Projekt A, leverans D2.1 (ändra mig)", "kind": "milestone", "start": "2027-06-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-b-campaign", "ringId": "projects", "title": "Projekt B, mätkampanj (ändra mig)", "kind": "span", "start": "2027-09-06", "end": "2027-11-26", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "proj-b-report", "ringId": "projects", "title": "Projekt B, årsrapport (ändra mig)", "kind": "milestone", "start": "2027-12-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-national", "ringId": "funding", "title": "Utlysning från nationellt forskningsråd (ändra mig)", "kind": "milestone", "start": "2027-03-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-eu", "ringId": "funding", "title": "Sista dag för EU-utlysning (ändra mig)", "kind": "milestone", "start": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "call-prep", "ringId": "funding", "title": "Ansökningsskrivande (ändra mig)", "kind": "span", "start": "2027-08-16", "end": "2027-09-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conf-abstract", "ringId": "dissemination", "title": "Sista dag för konferensabstrakt (ändra mig)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conf-main", "ringId": "dissemination", "title": "Huvudkonferens (ändra mig)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-submit", "ringId": "dissemination", "title": "Tidskriftsartikel inskickad (ändra mig)", "kind": "milestone", "start": "2027-04-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-summer", "ringId": "team", "title": "Sommaruppehåll (ändra mig)", "kind": "span", "start": "2027-07-01", "end": "2027-08-06", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-kickoff", "ringId": "team", "title": "Gruppens uppstartsdag (ändra mig)", "kind": "milestone", "start": "2027-08-23", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-dev-talks", "ringId": "team", "title": "Utvecklingssamtal (ändra mig)", "kind": "milestone", "start": "2027-11-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "team-meeting", "ringId": "team", "title": "Forskargruppsmöte (ändra mig)", "kind": "milestone", "start": "2027-01-12", "status": "planned", "recurrence": "monthly", "monthlyBy": "weekday", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "department-admin", "label": {"en": "Department or unit admin", "sv": "Institution eller enhet, administration"}, "wheel": {"en": {"schemaVersion": 1, "id": "department-admin", "title": "Department admin year", "owner": "", "template": "department-admin", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "board", "name": "Board and meetings", "color": "#0072B2", "order": 0}, {"id": "budget", "name": "Budget and finance", "color": "#E69F00", "order": 1}, {"id": "reporting", "name": "Reporting", "color": "#009E73", "order": 2}, {"id": "staff", "name": "Staff and HR", "color": "#CC79A7", "order": 3}], "events": [{"id": "board-feb", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-apr", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-04-21", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-sep", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-09-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "board-nov", "ringId": "board", "title": "Board meeting (edit me)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "dept-meeting", "ringId": "board", "title": "Department meeting (edit me)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "monthly", "interval": 2, "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "budget-draft", "ringId": "budget", "title": "Budget draft for next year (edit me)", "kind": "span", "start": "2027-08-23", "end": "2027-10-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "budget-decision", "ringId": "budget", "title": "Budget decision (edit me)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "tertial-1", "ringId": "budget", "title": "Financial follow-up 1 (edit me)", "kind": "milestone", "start": "2027-05-12", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "tertial-2", "ringId": "budget", "title": "Financial follow-up 2 (edit me)", "kind": "milestone", "start": "2027-09-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "annual-report", "ringId": "reporting", "title": "Annual report writing (edit me)", "kind": "span", "start": "2027-01-11", "end": "2027-02-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "annual-report-due", "ringId": "reporting", "title": "Annual report due (edit me)", "kind": "milestone", "start": "2027-02-26", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "ops-plan", "ringId": "reporting", "title": "Operational plan due (edit me)", "kind": "milestone", "start": "2027-12-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "appraisals", "ringId": "staff", "title": "Performance reviews (edit me)", "kind": "span", "start": "2027-03-01", "end": "2027-04-16", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "salary-review", "ringId": "staff", "title": "Salary review (edit me)", "kind": "milestone", "start": "2027-10-01", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "staff-day", "ringId": "staff", "title": "Staff day (edit me)", "kind": "milestone", "start": "2027-08-26", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "department-admin", "title": "Institutionens administrativa år", "owner": "", "template": "department-admin", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "board", "name": "Styrelse och möten", "color": "#0072B2", "order": 0}, {"id": "budget", "name": "Budget och ekonomi", "color": "#E69F00", "order": 1}, {"id": "reporting", "name": "Rapportering", "color": "#009E73", "order": 2}, {"id": "staff", "name": "Personal och HR", "color": "#CC79A7", "order": 3}], "events": [{"id": "board-feb", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-apr", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-04-21", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-sep", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-09-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "board-nov", "ringId": "board", "title": "Styrelsemöte (ändra mig)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "dept-meeting", "ringId": "board", "title": "Institutionsmöte (ändra mig)", "kind": "milestone", "start": "2027-01-20", "status": "planned", "recurrence": "monthly", "interval": 2, "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "budget-draft", "ringId": "budget", "title": "Budgetförslag för nästa år (ändra mig)", "kind": "span", "start": "2027-08-23", "end": "2027-10-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "budget-decision", "ringId": "budget", "title": "Budgetbeslut (ändra mig)", "kind": "milestone", "start": "2027-11-24", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "tertial-1", "ringId": "budget", "title": "Ekonomisk uppföljning 1 (ändra mig)", "kind": "milestone", "start": "2027-05-12", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "tertial-2", "ringId": "budget", "title": "Ekonomisk uppföljning 2 (ändra mig)", "kind": "milestone", "start": "2027-09-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "annual-report", "ringId": "reporting", "title": "Arbete med årsredovisning (ändra mig)", "kind": "span", "start": "2027-01-11", "end": "2027-02-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "annual-report-due", "ringId": "reporting", "title": "Årsredovisning klar (ändra mig)", "kind": "milestone", "start": "2027-02-26", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "ops-plan", "ringId": "reporting", "title": "Verksamhetsplan klar (ändra mig)", "kind": "milestone", "start": "2027-12-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "appraisals", "ringId": "staff", "title": "Medarbetarsamtal (ändra mig)", "kind": "span", "start": "2027-03-01", "end": "2027-04-16", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "salary-review", "ringId": "staff", "title": "Lönerevision (ändra mig)", "kind": "milestone", "start": "2027-10-01", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "staff-day", "ringId": "staff", "title": "Personaldag (ändra mig)", "kind": "milestone", "start": "2027-08-26", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "lab-maintenance", "label": {"en": "Lab maintenance and calibration", "sv": "Labbunderhåll och kalibrering"}, "wheel": {"en": {"schemaVersion": 1, "id": "lab-maintenance", "title": "Lab maintenance and calibration", "owner": "", "template": "lab-maintenance", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "calibration", "name": "Calibration", "color": "#0072B2", "order": 0}, {"id": "maintenance", "name": "Maintenance", "color": "#E69F00", "order": 1}, {"id": "service", "name": "Service visits", "color": "#009E73", "order": 2}, {"id": "safety", "name": "Safety", "color": "#CC79A7", "order": 3}], "events": [{"id": "cal-cmm", "ringId": "calibration", "title": "CMM calibration (edit me)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-interferometer", "ringId": "calibration", "title": "Interferometer calibration (edit me)", "kind": "milestone", "start": "2027-04-12", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-roughness-1", "ringId": "calibration", "title": "Roughness standard check (edit me)", "kind": "milestone", "start": "2027-03-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-roughness-2", "ringId": "calibration", "title": "Roughness standard check (edit me)", "kind": "milestone", "start": "2027-09-06", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "cal-gauge-blocks", "ringId": "calibration", "title": "Gauge block verification (edit me)", "kind": "milestone", "start": "2027-10-18", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-summer", "ringId": "maintenance", "title": "Preventive maintenance, all instruments (edit me)", "kind": "span", "start": "2027-07-05", "end": "2027-07-23", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-winter", "ringId": "maintenance", "title": "Preventive maintenance, all instruments (edit me)", "kind": "span", "start": "2027-12-13", "end": "2027-12-22", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "maint-filters", "ringId": "maintenance", "title": "Air filter and climate check (edit me)", "kind": "milestone", "start": "2027-05-17", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "svc-cmm", "ringId": "service", "title": "CMM vendor service visit (edit me)", "kind": "span", "start": "2027-02-08", "end": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "svc-microscope", "ringId": "service", "title": "Optical profilometer service (edit me)", "kind": "milestone", "start": "2027-11-08", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-inspection", "ringId": "safety", "title": "Lab safety inspection (edit me)", "kind": "milestone", "start": "2027-03-22", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-chemicals", "ringId": "safety", "title": "Chemical inventory (edit me)", "kind": "milestone", "start": "2027-09-27", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "safety-training", "ringId": "safety", "title": "Safety training for new users (edit me)", "kind": "milestone", "start": "2027-09-02", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "lab-maintenance", "title": "Labbunderhåll och kalibrering", "owner": "", "template": "lab-maintenance", "yearStart": "2027-01-01", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": false, "showQuarters": true, "quarterStartMonth": 1, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "calibration", "name": "Kalibrering", "color": "#0072B2", "order": 0}, {"id": "maintenance", "name": "Underhåll", "color": "#E69F00", "order": 1}, {"id": "service", "name": "Servicebesök", "color": "#009E73", "order": 2}, {"id": "safety", "name": "Säkerhet", "color": "#CC79A7", "order": 3}], "events": [{"id": "cal-cmm", "ringId": "calibration", "title": "Kalibrering av koordinatmätmaskin (CMM) (ändra mig)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-interferometer", "ringId": "calibration", "title": "Kalibrering av interferometer (ändra mig)", "kind": "milestone", "start": "2027-04-12", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-roughness-1", "ringId": "calibration", "title": "Kontroll av ytjämnhetsnormal (ändra mig)", "kind": "milestone", "start": "2027-03-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-roughness-2", "ringId": "calibration", "title": "Kontroll av ytjämnhetsnormal (ändra mig)", "kind": "milestone", "start": "2027-09-06", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "cal-gauge-blocks", "ringId": "calibration", "title": "Verifiering av passbitar (ändra mig)", "kind": "milestone", "start": "2027-10-18", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-summer", "ringId": "maintenance", "title": "Förebyggande underhåll, alla instrument (ändra mig)", "kind": "span", "start": "2027-07-05", "end": "2027-07-23", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-winter", "ringId": "maintenance", "title": "Förebyggande underhåll, alla instrument (ändra mig)", "kind": "span", "start": "2027-12-13", "end": "2027-12-22", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "maint-filters", "ringId": "maintenance", "title": "Kontroll av luftfilter och klimat (ändra mig)", "kind": "milestone", "start": "2027-05-17", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "svc-cmm", "ringId": "service", "title": "Servicebesök från CMM-leverantören (ändra mig)", "kind": "span", "start": "2027-02-08", "end": "2027-02-10", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "svc-microscope", "ringId": "service", "title": "Service av optisk profilometer (ändra mig)", "kind": "milestone", "start": "2027-11-08", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-inspection", "ringId": "safety", "title": "Säkerhetsrond i labbet (ändra mig)", "kind": "milestone", "start": "2027-03-22", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-chemicals", "ringId": "safety", "title": "Kemikalieinventering (ändra mig)", "kind": "milestone", "start": "2027-09-27", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "safety-training", "ringId": "safety", "title": "Säkerhetsutbildning för nya användare (ändra mig)", "kind": "milestone", "start": "2027-09-02", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "phd-journey", "label": {"en": "PhD journey (4 years)", "sv": "Doktorandresan (4 år)"}, "wheel": {"en": {"schemaVersion": 1, "id": "phd-journey", "title": "PhD journey", "owner": "", "template": "phd-journey", "yearStart": "2026-08-31", "years": 4, "settings": {"language": "en", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "milestones", "name": "Milestones", "color": "#0072B2", "order": 0}, {"id": "courses", "name": "Courses", "color": "#E69F00", "order": 1}, {"id": "papers", "name": "Papers and conferences", "color": "#009E73", "order": 2}, {"id": "teaching", "name": "Teaching", "color": "#CC79A7", "order": 3}], "events": [{"id": "phd-start", "ringId": "milestones", "title": "Start of doctoral studies (edit me)", "kind": "milestone", "start": "2026-09-01", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "isp-update", "ringId": "milestones", "title": "Individual study plan (ISP) update (edit me)", "kind": "milestone", "start": "2026-11-16", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "isp-first", "ringId": "milestones", "title": "First ISP approved (edit me)", "kind": "milestone", "start": "2026-12-14", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "lic-seminar", "ringId": "milestones", "title": "Licentiate seminar (if applicable) (edit me)", "kind": "milestone", "start": "2028-12-08", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "final-seminar", "ringId": "milestones", "title": "Final seminar (edit me)", "kind": "milestone", "start": "2030-03-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "defence", "ringId": "milestones", "title": "Thesis defence (edit me)", "kind": "milestone", "start": "2030-06-05", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-methods", "ringId": "courses", "title": "Research methods course (edit me)", "kind": "span", "start": "2026-09-07", "end": "2026-10-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-ethics", "ringId": "courses", "title": "Research ethics course (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-field", "ringId": "courses", "title": "Advanced course in your field (edit me)", "kind": "span", "start": "2027-09-06", "end": "2027-12-17", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-teaching", "ringId": "courses", "title": "Teaching and learning in higher education (edit me)", "kind": "span", "start": "2028-01-17", "end": "2028-03-17", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-1", "ringId": "papers", "title": "Paper 1 submitted (edit me)", "kind": "milestone", "start": "2027-06-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-2", "ringId": "papers", "title": "Paper 2 submitted (edit me)", "kind": "milestone", "start": "2028-05-31", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "paper-3", "ringId": "papers", "title": "Paper 3 submitted (edit me)", "kind": "milestone", "start": "2029-04-30", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "conference", "ringId": "papers", "title": "Annual conference (edit me)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "thesis-writing", "ringId": "papers", "title": "Thesis writing (edit me)", "kind": "span", "start": "2029-09-01", "end": "2030-02-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "teaching-lab", "ringId": "teaching", "title": "Lab supervision (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "phd-journey", "title": "Doktorandresan", "owner": "", "template": "phd-journey", "yearStart": "2026-08-31", "years": 4, "settings": {"language": "sv", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "milestones", "name": "Milstolpar", "color": "#0072B2", "order": 0}, {"id": "courses", "name": "Kurser", "color": "#E69F00", "order": 1}, {"id": "papers", "name": "Artiklar och konferenser", "color": "#009E73", "order": 2}, {"id": "teaching", "name": "Undervisning", "color": "#CC79A7", "order": 3}], "events": [{"id": "phd-start", "ringId": "milestones", "title": "Start av forskarutbildningen (ändra mig)", "kind": "milestone", "start": "2026-09-01", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "isp-update", "ringId": "milestones", "title": "Uppdatering av individuell studieplan (ISP) (ändra mig)", "kind": "milestone", "start": "2026-11-16", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "isp-first", "ringId": "milestones", "title": "Första ISP fastställd (ändra mig)", "kind": "milestone", "start": "2026-12-14", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "lic-seminar", "ringId": "milestones", "title": "Licentiatseminarium (om aktuellt) (ändra mig)", "kind": "milestone", "start": "2028-12-08", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "final-seminar", "ringId": "milestones", "title": "Slutseminarium (ändra mig)", "kind": "milestone", "start": "2030-03-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "defence", "ringId": "milestones", "title": "Disputation (ändra mig)", "kind": "milestone", "start": "2030-06-05", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-methods", "ringId": "courses", "title": "Kurs i forskningsmetodik (ändra mig)", "kind": "span", "start": "2026-09-07", "end": "2026-10-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-ethics", "ringId": "courses", "title": "Kurs i forskningsetik (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-field", "ringId": "courses", "title": "Fördjupningskurs inom ditt område (ändra mig)", "kind": "span", "start": "2027-09-06", "end": "2027-12-17", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-teaching", "ringId": "courses", "title": "Högskolepedagogik (ändra mig)", "kind": "span", "start": "2028-01-17", "end": "2028-03-17", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-1", "ringId": "papers", "title": "Artikel 1 inskickad (ändra mig)", "kind": "milestone", "start": "2027-06-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-2", "ringId": "papers", "title": "Artikel 2 inskickad (ändra mig)", "kind": "milestone", "start": "2028-05-31", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "paper-3", "ringId": "papers", "title": "Artikel 3 inskickad (ändra mig)", "kind": "milestone", "start": "2029-04-30", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "conference", "ringId": "papers", "title": "Årlig konferens (ändra mig)", "kind": "span", "start": "2027-06-07", "end": "2027-06-11", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "thesis-writing", "ringId": "papers", "title": "Avhandlingsskrivande (ändra mig)", "kind": "span", "start": "2029-09-01", "end": "2030-02-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "teaching-lab", "ringId": "teaching", "title": "Labbhandledning (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}, {"id": "course-periods", "label": {"en": "Course periods", "sv": "Läsperioder och kurser"}, "wheel": {"en": {"schemaVersion": 1, "id": "course-periods", "title": "Course periods", "owner": "", "template": "course-periods", "yearStart": "2026-08-31", "years": 1, "settings": {"language": "en", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "teaching", "name": "Courses I teach", "color": "#0072B2", "order": 0}, {"id": "taking", "name": "Courses I take", "color": "#E69F00", "order": 1}, {"id": "exams", "name": "Exams", "color": "#009E73", "order": 2}, {"id": "planning", "name": "Course planning", "color": "#CC79A7", "order": 3}], "events": [{"id": "teach-p1", "ringId": "teaching", "title": "Course A (teaching) (edit me)", "kind": "span", "start": "2026-08-31", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "teach-p3", "ringId": "teaching", "title": "Course B (teaching) (edit me)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "take-p2", "ringId": "taking", "title": "Course C (studying) (edit me)", "kind": "span", "start": "2026-11-02", "end": "2027-01-15", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "take-p4", "ringId": "taking", "title": "Course D (studying) (edit me)", "kind": "span", "start": "2027-03-22", "end": "2027-06-04", "status": "planned", "recurrence": "none", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p1", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2026-10-26", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p2", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-01-11", "end": "2027-01-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p3", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-03-15", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "exam-p4", "ringId": "exams", "title": "Exam week (edit me)", "kind": "span", "start": "2027-05-31", "end": "2027-06-04", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "reexam", "ringId": "exams", "title": "Re-exam period (edit me)", "kind": "span", "start": "2027-08-16", "end": "2027-08-27", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "course-eval", "ringId": "planning", "title": "Course evaluation report (edit me)", "kind": "milestone", "start": "2026-11-20", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "syllabus", "ringId": "planning", "title": "Syllabus changes due (edit me)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}, {"id": "schedule", "ringId": "planning", "title": "Schedule requests for next year (edit me)", "kind": "milestone", "start": "2027-04-15", "status": "planned", "recurrence": "yearly", "notes": "Placeholder date. Edit me.", "placeholder": true}], "reviews": [], "changelog": []}, "sv": {"schemaVersion": 1, "id": "course-periods", "title": "Läsperioder och kurser", "owner": "", "template": "course-periods", "yearStart": "2026-08-31", "years": 1, "settings": {"language": "sv", "weekTicks": false, "showPeriods": true, "showQuarters": true, "quarterStartMonth": 9, "periods": [{"id": "p1", "label": "P1", "start": "2026-08-31", "end": "2026-10-30", "placeholder": true}, {"id": "p2", "label": "P2", "start": "2026-11-02", "end": "2027-01-15", "placeholder": true}, {"id": "p3", "label": "P3", "start": "2027-01-18", "end": "2027-03-19", "placeholder": true}, {"id": "p4", "label": "P4", "start": "2027-03-22", "end": "2027-06-04", "placeholder": true}]}, "rings": [{"id": "teaching", "name": "Kurser jag undervisar i", "color": "#0072B2", "order": 0}, {"id": "taking", "name": "Kurser jag läser", "color": "#E69F00", "order": 1}, {"id": "exams", "name": "Tentor", "color": "#009E73", "order": 2}, {"id": "planning", "name": "Kursplanering", "color": "#CC79A7", "order": 3}], "events": [{"id": "teach-p1", "ringId": "teaching", "title": "Kurs A (undervisning) (ändra mig)", "kind": "span", "start": "2026-08-31", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "teach-p3", "ringId": "teaching", "title": "Kurs B (undervisning) (ändra mig)", "kind": "span", "start": "2027-01-18", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "take-p2", "ringId": "taking", "title": "Kurs C (studier) (ändra mig)", "kind": "span", "start": "2026-11-02", "end": "2027-01-15", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "take-p4", "ringId": "taking", "title": "Kurs D (studier) (ändra mig)", "kind": "span", "start": "2027-03-22", "end": "2027-06-04", "status": "planned", "recurrence": "none", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p1", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2026-10-26", "end": "2026-10-30", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p2", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-01-11", "end": "2027-01-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p3", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-03-15", "end": "2027-03-19", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "exam-p4", "ringId": "exams", "title": "Tentavecka (ändra mig)", "kind": "span", "start": "2027-05-31", "end": "2027-06-04", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "reexam", "ringId": "exams", "title": "Omtentaperiod (ändra mig)", "kind": "span", "start": "2027-08-16", "end": "2027-08-27", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "course-eval", "ringId": "planning", "title": "Kursvärderingsrapport (ändra mig)", "kind": "milestone", "start": "2026-11-20", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "syllabus", "ringId": "planning", "title": "Ändringar i kursplan klara (ändra mig)", "kind": "milestone", "start": "2027-02-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}, {"id": "schedule", "ringId": "planning", "title": "Schemaönskemål för nästa år (ändra mig)", "kind": "milestone", "start": "2027-04-15", "status": "planned", "recurrence": "yearly", "notes": "Platshållardatum. Ändra mig.", "placeholder": true}], "reviews": [], "changelog": []}}}]/*TEMPLATES-END*/;
 
 /* ============================================================ MODEL
    Schema version, migrations, canonical key order and a light validator.
@@ -1203,7 +1418,8 @@ const KEY_ORDER = {
   settings: ['language', 'weekTicks', 'showPeriods', 'showQuarters', 'quarterStartMonth', 'wheelTop', 'timeZone', 'textScale', 'colorOpacity', 'ringOpacity', 'periods'],
   period: ['id', 'label', 'start', 'end', 'placeholder'],
   ring: ['id', 'name', 'color', 'order', 'hidden'],
-  event: ['id', 'ringId', 'title', 'kind', 'start', 'end', 'startTime', 'endTime', 'timing', 'status', 'recurrence', 'owner', 'notes', 'placeholder', 'prevStart', 'prevEnd'],
+  event: ['id', 'ringId', 'title', 'kind', 'start', 'end', 'startTime', 'endTime', 'timing', 'status', 'recurrence', 'interval', 'monthlyBy', 'until', 'exceptions', 'owner', 'notes', 'placeholder', 'prevStart', 'prevEnd'],
+  exception: ['date', 'status', 'start', 'end'],
   review: ['quarter', 'date', 'reviewer', 'note'],
   change: ['timestamp', 'eventId', 'title', 'action', 'before', 'after', 'reason'],
   range: ['start', 'end', 'startTime', 'endTime', 'timing']
@@ -1219,7 +1435,11 @@ function canonical(w) {
   if (c.settings) c.settings = ordered(c.settings, KEY_ORDER.settings);
   if (c.settings && c.settings.periods) c.settings.periods = c.settings.periods.map(p => ordered(p, KEY_ORDER.period));
   c.rings = (c.rings || []).map(r => ordered(r, KEY_ORDER.ring));
-  c.events = (c.events || []).map(e => ordered(e, KEY_ORDER.event));
+  c.events = (c.events || []).map(e => {
+    const o = ordered(e, KEY_ORDER.event);
+    if (Array.isArray(o.exceptions)) o.exceptions = o.exceptions.map(x => ordered(x, KEY_ORDER.exception));
+    return o;
+  });
   c.reviews = (c.reviews || []).map(r => ordered(r, KEY_ORDER.review));
   c.changelog = (c.changelog || []).map(x => {
     const y = ordered(x, KEY_ORDER.change);
@@ -1256,6 +1476,7 @@ function checkWheel(w) {
     }
     if (!['milestone', 'span'].includes(e.kind)) warn.push(t('warnKind', { name }));
     if (!['planned', 'moved', 'cancelled', 'done'].includes(e.status)) warn.push(t('warnStatus', { name }));
+    if (e.recurrence !== undefined && !['none', 'weekly', 'monthly', 'yearly'].includes(e.recurrence)) warn.push(t('warnRepeat', { name }));
   });
   (w.changelog || []).forEach((c, i) => {
     if ((c.action === 'moved' || c.action === 'cancelled') && !String(c.reason || '').trim()) warn.push(t('warnReason', { n: i + 1, action: t('act_' + c.action) }));
@@ -1500,13 +1721,29 @@ function textArc(r, a0, a1) {
 }
 const textW = (s, fs) => s.length * fs * 0.56;
 
-// All occurrences of an event inside [ys, ye). Yearly events repeat from their first date onwards.
+// All occurrences of an event inside [ys, ye), as { s, e } day numbers (e exclusive). Yearly events
+// repeat from their first date onwards. Weekly and monthly ones also carry `occ` (the original date,
+// which keys ev.exceptions), `st` (status of that one meeting) and `prev` (original day of a moved one).
 function occurrences(ev, ys, ye, startKey, endKey) {
   const st = ev[startKey || 'start'], en = ev[endKey || 'end'];
   if (!isDate(st)) return [];
   const s = d2n(st), e = ev.kind === 'span' && isDate(en) ? d2n(en) + 1 : s + 1;
   if (e <= s) return [];
   const out = [];
+  if (pIsRepeat(ev)) {
+    const len = e - s, ex = exceptionMap(Object.assign({}, ev, { start: st })), status = x => (ev.status === 'cancelled' ? 'cancelled' : x ? x.status : ev.status);
+    repeatStarts(Object.assign({}, ev, { start: st }), n2d(ys - len + 1), n2d(ye - 1)).forEach(d => {
+      const x = ex[d];
+      if (!x || x.status !== 'moved') out.push({ s: d2n(d), e: d2n(d) + len, k: d, occ: d, st: status(x) });
+    });
+    Object.keys(ex).forEach(d => {
+      const x = ex[d];
+      if (x.status !== 'moved') return;
+      const s2 = d2n(x.start), e2 = ev.kind === 'span' && isDate(x.end) && x.end >= x.start ? d2n(x.end) + 1 : s2 + len;
+      if (e2 > ys && s2 < ye) out.push({ s: s2, e: e2, k: d, occ: d, st: status(x), prev: d2n(d) });
+    });
+    return out.sort((a, b) => a.s - b.s);
+  }
   if (ev.recurrence === 'yearly') {
     const k0 = new Date(ys * DAY).getUTCFullYear() - +st.slice(0, 4);
     for (let k = k0 - 1; k <= k0 + 1; k++) {
@@ -1516,6 +1753,15 @@ function occurrences(ev, ys, ye, startKey, endKey) {
     }
   } else if (e > ys && s < ye) out.push({ s, e, k: 0 });
   return out;
+}
+// Exceptions of a weekly or monthly event by original date; only those that match a repeat of the
+// current rule count (after the rule changes, the others are ignored and dropped on the next save).
+function exceptionMap(ev) {
+  const m = {};
+  (Array.isArray(ev.exceptions) ? ev.exceptions : []).forEach(x => {
+    if (x && ['done', 'cancelled', 'moved'].includes(x.status) && (x.status !== 'moved' || isDate(x.start)) && isRepeatStart(ev, x.date)) m[x.date] = x;
+  });
+  return m;
 }
 
 // Colour strength. settings.colorOpacity: how solid event fills are (0.1 to 1; 1 = exactly the
@@ -1644,28 +1890,36 @@ function renderWheel() {
       laneEnd[li] = o.e; o.lane = li;
     });
     const L = Math.max(1, laneEnd.length), lt = T / L;
+    // Weekly and monthly events get one outside label (on their first occurrence in view), not one per meeting.
+    const labelled = new Set();
+    const occAttr = o => (o.occ ? '" data-occ="' + o.occ : '');
     spans.forEach(o => {
       const ev = o.ev, lr1 = r1 - o.lane * lt - 0.8, lr0 = r1 - (o.lane + 1) * lt + 0.8;
       let a0 = A(Math.max(o.s, ys)), a1 = A(Math.min(o.e, ye));
       if (a1 - a0 < 0.012) { const mid = (a0 + a1) / 2; a0 = mid - 0.006; a1 = mid + 0.006; }
-      const st = ev.status;
+      const st = o.st || ev.status;
       const style = st === 'cancelled' ? 'fill:none;stroke:' + edge
         : 'fill:' + col + ';fill-opacity:' + (st === 'done' ? alpha(0.42, 0.5) : alpha(1, 1)) + ';stroke:' + edge;
-      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring)) + '">' +
+      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '">' +
         '<path class="shape" pointer-events="all" d="' + sector(lr0, lr1, a0, a1) + '" style="' + style + '"/></g>');
+      if (o.prev !== undefined) {
+        const g0 = o.prev, g1 = o.prev + (o.e - o.s);
+        if (g1 > ys && g0 < ye) ghosts.push('<g class="ghost"><path class="shape" d="' + sector(lr0, lr1, A(Math.max(g0, ys)), A(Math.min(g1, ye))) + '" style="stroke:' + edge + '"/></g>');
+      }
       // Old position of a moved span, drawn faintly in the same lane.
-      if (st === 'moved' && ev.prevStart) {
+      if (!o.occ && st === 'moved' && ev.prevStart) {
         occurrences(Object.assign({}, ev, { start: ev.prevStart, end: ev.prevEnd || ev.end }), ys, ye).forEach(g => {
           ghosts.push('<g class="ghost"><path class="shape" d="' + sector(lr0, lr1, A(Math.max(g.s, ys)), A(Math.min(g.e, ye))) + '" style="stroke:' + edge + '"/></g>');
         });
       }
       // Larger text may use more of the lane; a label that does not fit goes outside with a leader line.
-      const label = labelText(ev), fs = Math.min(11.5 * ts, lt * (ts > 1 ? 0.75 : 0.62)), rm = (lr0 + lr1) / 2;
+      const label = labelText(ev, st), fs = Math.min(11.5 * ts, lt * (ts > 1 ? 0.75 : 0.62)), rm = (lr0 + lr1) / 2;
       if (lt >= 11 && fs >= 6 && (a1 - a0) * rm > textW(label, fs) + 10) {
         const ink = labelInk(col, st === 'cancelled' ? 0 : +(st === 'done' ? alpha(0.42, 0.5) : alpha(1, 1)), bandA);
         top.push(textPath(rm, a0, a1, 'arc-lbl' + (st === 'cancelled' ? ' cancelled' : ''), label, fs, ink));
-      } else {
-        ext.push({ id: ev.id, a: (a0 + a1) / 2, r: rm, text: label, st });
+      } else if (!o.occ || !labelled.has(ev.id)) {
+        labelled.add(ev.id);
+        ext.push({ id: ev.id, a: (a0 + a1) / 2, r: rm, text: o.occ ? labelText(ev, ev.status) : label, st: o.occ ? ev.status : st });
       }
     });
     // Milestones: diamonds on the ring centre line. Same-day milestones are nudged apart.
@@ -1674,19 +1928,25 @@ function renderWheel() {
     list.filter(e => e.kind !== 'span').forEach(ev => occurrences(ev, ys, ye).forEach(o => {
       const key = o.s, k = sameDay[key] = (sameDay[key] || 0) + 1;
       const rm = (r0 + r1) / 2 + (k - 1) * sz * 1.6 * (k % 2 ? 1 : -1) * 0.7;
-      const a = A(o.s + 0.5), p = pol(rm, a), st = ev.status;
+      const a = A(o.s + 0.5), p = pol(rm, a), st = o.st || ev.status;
       const style = st === 'cancelled' ? 'fill:var(--panel);stroke:' + col
         : st === 'done' ? 'fill:' + col + ';fill-opacity:' + alpha(1.2, 0.9) + ';stroke:' + edge
           : 'fill:' + col + ';stroke:var(--panel)';
       const d = 'M' + f1(p[0]) + ' ' + f1(p[1] - sz) + ' L' + f1(p[0] + sz) + ' ' + f1(p[1]) + ' L' + f1(p[0]) + ' ' + f1(p[1] + sz) + ' L' + f1(p[0] - sz) + ' ' + f1(p[1]) + ' Z';
-      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring)) + '"><path class="shape" pointer-events="all" d="' + d + '" style="' + style + '"/></g>');
-      if (st === 'moved' && ev.prevStart) {
+      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '"><path class="shape" pointer-events="all" d="' + d + '" style="' + style + '"/></g>');
+      if (o.prev !== undefined && o.prev >= ys && o.prev < ye) {
+        const q = pol(rm, A(o.prev + 0.5));
+        ghosts.push('<g class="ghost"><path class="shape" style="stroke:' + edge + '" d="M' + f1(q[0]) + ' ' + f1(q[1] - sz) + ' L' + f1(q[0] + sz) + ' ' + f1(q[1]) + ' L' + f1(q[0]) + ' ' + f1(q[1] + sz) + ' L' + f1(q[0] - sz) + ' ' + f1(q[1]) + ' Z"/></g>');
+      }
+      if (!o.occ && st === 'moved' && ev.prevStart) {
         occurrences(Object.assign({}, ev, { start: ev.prevStart }), ys, ye).forEach(g => {
           const q = pol(rm, A(g.s + 0.5));
           ghosts.push('<g class="ghost"><path class="shape" style="stroke:' + edge + '" d="M' + f1(q[0]) + ' ' + f1(q[1] - sz) + ' L' + f1(q[0] + sz) + ' ' + f1(q[1]) + ' L' + f1(q[0]) + ' ' + f1(q[1] + sz) + ' L' + f1(q[0] - sz) + ' ' + f1(q[1]) + ' Z"/></g>');
         });
       }
-      ext.push({ id: ev.id, a, r: rm + sz, text: labelText(ev), st });
+      if (o.occ && labelled.has(ev.id)) return;
+      labelled.add(ev.id);
+      ext.push({ id: ev.id, a, r: rm + sz, text: labelText(ev, o.occ ? ev.status : st), st: o.occ ? ev.status : st });
     }));
   });
 
@@ -1715,12 +1975,32 @@ function renderWheel() {
   svg.setAttribute('aria-label', (w.title || t('untitled')) + ', ' + yearLabel(state.yearIdx));
 }
 
-function labelText(ev) {
-  const pre = ev.status === 'done' ? '✓ ' : ev.status === 'cancelled' ? '✕ ' : '';
+function labelText(ev, st) {
+  st = st || ev.status;
+  const pre = st === 'done' ? '✓ ' : st === 'cancelled' ? '✕ ' : '';
   return pre + ev.title;
 }
-function ariaFor(ev, ring) {
+function ariaFor(ev, ring, o) {
+  if (o && o.occ) return [ev.title, ring.name, fmtR(occRange(ev, o)), t('st_' + o.st), repeatText(ev)].join(', ');
   return [ev.title, ring.name, fmtEv(ev), t('st_' + ev.status)].join(', ');
+}
+// Dates (and times) of one occurrence { s, e } as a changelog range.
+function occRange(ev, o) { return range(Object.assign({}, ev, { start: n2d(o.s), end: ev.kind === 'span' ? n2d(o.e - 1) : undefined })); }
+// "Every 2 months, the second Tuesday, until 30 Jun 2027"; '' when the event does not repeat.
+function repeatText(ev) {
+  if (ev.recurrence === 'yearly') return t('repeatsYearly');
+  if (!pIsRepeat(ev)) return '';
+  const n = pInterval(ev), w = ev.recurrence === 'weekly';
+  const parts = [t((w ? 'repWeek' : 'repMonth') + (n === 1 ? '1' : n === 2 ? '2' : 'N'), { n })];
+  if (pByWeekday(ev)) parts.push(weekdayOfMonth(ev.start));
+  if (isDate(ev.until)) parts.push(t('repUntil', { d: fmtDate(ev.until) }));
+  return parts.join(', ');
+}
+// "the second Tuesday" / "andra tisdagen" for a date.
+function weekdayOfMonth(s) {
+  const mw = pMonthWeek(s);
+  const wd = new Date(d2n(s) * DAY).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'en-GB', { weekday: 'long', timeZone: 'UTC' });
+  return t('nthWeekday', { nth: t('nth' + (mw.nth < 0 ? 'Last' : mw.nth)), wd });
 }
 function wrap(text, width, maxLines) {
   const words = String(text).split(/\s+/), out = [];
@@ -1784,15 +2064,17 @@ function legend(rings) {
 
 /* ============================================================ TOOLTIP */
 const tip = $('#tooltip');
-function showTip(id, clientX, clientY) {
+function showTip(id, clientX, clientY, occ) {
   const ev = state.wheel.events.find(e => e.id === id);
   if (!ev) return;
   const ring = state.wheel.rings.find(r => r.id === ev.ringId) || { name: '?' };
-  const meta = [ring.name, fmtEv(ev), t('st_' + ev.status)];
-  if (ev.recurrence === 'yearly') meta.push(t('repeatsYearly'));
+  const o = occ && occOf(ev, occ);
+  const meta = o ? [ring.name, fmtR(occRange(ev, o)), t('st_' + o.st)] : [ring.name, fmtEv(ev), t('st_' + ev.status)];
+  if (repeatText(ev)) meta.push(repeatText(ev));
   let html = '<div class="tt-title">' + esc(ev.title) + '</div><div class="tt-meta">' + meta.map(esc).join(' &middot; ') + '</div>';
+  if (o && o.prev !== undefined) html += '<div class="tt-meta">' + esc(t('previously', { dates: fmtDate(occ) })) + '</div>';
   if (ev.owner) html += '<div class="tt-meta">' + esc(t('owner', { o: ev.owner })) + '</div>';
-  if (ev.status === 'moved' && ev.prevStart) html += '<div class="tt-meta">' + esc(t('previously', { dates: fmtRange(ev.prevStart, ev.kind === 'span' ? ev.prevEnd : null) })) + '</div>';
+  if (!o && ev.status === 'moved' && ev.prevStart) html += '<div class="tt-meta">' + esc(t('previously', { dates: fmtRange(ev.prevStart, ev.kind === 'span' ? ev.prevEnd : null) })) + '</div>';
   if (ev.notes) html += '<div class="tt-notes">' + esc(ev.notes) + '</div>';
   tip.innerHTML = html;
   tip.hidden = false;
@@ -1815,11 +2097,20 @@ function openDrawer(tab) {
   if (tab === 'settings') renderSettingsPanel();
   if (tab === 'event' && state.editingId === undefined) openEditor(null);
 }
-function closeDrawer() { $('#drawer').hidden = true; state.editingId = undefined; }
+function closeDrawer() { $('#drawer').hidden = true; state.editingId = undefined; state.editingOcc = null; }
+// The occurrence of a weekly or monthly event that started out on `date`, with its status now.
+function occOf(ev, date) {
+  if (!pIsRepeat(ev) || !isRepeatStart(ev, date)) return null;
+  const x = exceptionMap(ev)[date], len = ev.kind === 'span' && isDate(ev.end) ? d2n(ev.end) - d2n(ev.start) : 0;
+  const st = ev.status === 'cancelled' ? 'cancelled' : x ? x.status : ev.status;
+  if (x && x.status === 'moved') return { s: d2n(x.start), e: (ev.kind === 'span' && isDate(x.end) && x.end >= x.start ? d2n(x.end) : d2n(x.start) + len) + 1, occ: date, st, prev: d2n(date) };
+  return { s: d2n(date), e: d2n(date) + len + 1, occ: date, st };
+}
 function currentTab() { const b = $('.tabs [aria-selected=true]'); return b && !$('#drawer').hidden ? b.dataset.tab : null; }
 
-function openEditor(id, preset) {
+function openEditor(id, preset, occ) {
   if (!state.wheel) return;
+  if (id !== state.editingId || occ !== undefined) state.editingOcc = occ || null;
   state.editingId = id;
   const f = $('#evForm'), w = state.wheel;
   const ev = id ? w.events.find(e => e.id === id) : Object.assign({
@@ -1839,13 +2130,17 @@ function openEditor(id, preset) {
   f.endTime.value = ev.endTime || '17:00';
   $('#tzHint').textContent = t('tzHint', { tz: wheelTz() });
   f.status.value = ev.status;
-  f.recurrence.value = ev.recurrence || 'none';
+  f.recurrence.value = ['weekly', 'monthly', 'yearly'].includes(ev.recurrence) ? ev.recurrence : 'none';
+  f.interval.value = pInterval(ev);
+  f.monthlyBy.value = ev.monthlyBy === 'weekday' ? 'weekday' : 'date';
+  f.until.value = isDate(ev.until) ? ev.until : '';
   f.owner.value = ev.owner || '';
   f.notes.value = ev.notes || '';
   $('#evError').textContent = '';
   $('#btnEvDelete').hidden = !id;
   $('#btnEvCancelEvent').hidden = !id || ev.status === 'cancelled';
   syncKind();
+  renderExceptions(id ? ev : null);
   // Per-event history from the change log.
   const hist = id ? w.changelog.filter(c => c.eventId === id) : [];
   $('#evHistoryWrap').hidden = !hist.length;
@@ -1870,6 +2165,68 @@ function syncKind() {
   $('#lblWholeDay').textContent = t(span ? 'wholeDays' : 'wholeDay');
   $('#timeRow').hidden = f.timing.value === 'day';
   $('#timingHint').textContent = f.timing.value === 'daily' ? t('timingDailyHint') : f.timing.value === 'continuous' ? t('timingContHint') : '';
+  syncRepeat();
+}
+// Repeat fields follow the chosen repeat; the hint reads back the rule ("Every 2 months, the second Tuesday").
+function syncRepeat() {
+  const f = $('#evForm'), rec = f.recurrence.value, rep = rec === 'weekly' || rec === 'monthly', span = f.kind.value === 'span';
+  $('#repeatWrap').hidden = !rep;
+  if (!rep) return;
+  $('#lblInterval').textContent = t(rec === 'weekly' ? 'fIntervalWeeks' : 'fIntervalMonths');
+  const start = isDate(f.start.value) ? f.start.value : TODAY, day = +start.slice(8);
+  $('#monthlyByWrap').hidden = rec !== 'monthly' || span;
+  f.monthlyBy.options[0].textContent = t('onDay', { d: day });
+  f.monthlyBy.options[1].textContent = t('onWeekday', { x: weekdayOfMonth(start) });
+  const probe = { kind: f.kind.value, start, recurrence: rec, interval: +f.interval.value, monthlyBy: f.monthlyBy.value, until: f.until.value };
+  const notes = [repeatText(probe)];
+  if (rec === 'monthly' && !pByWeekday(probe) && day > 28) notes.push(t('hintMonthEnd', { d: day }));
+  $('#repeatHint').textContent = notes.join('. ');
+}
+// Single changed meetings of the series, and the box for the one that was clicked on the wheel.
+function renderExceptions(ev) {
+  const rep = !!ev && pIsRepeat(ev), ex = rep ? exceptionMap(ev) : {}, dates = Object.keys(ex).sort();
+  $('#excWrap').hidden = !dates.length;
+  $('#excList').innerHTML = dates.map(d => {
+    const x = ex[d];
+    return '<li><button type="button" class="linkbtn" data-occ="' + esc(d) + '">' + esc(fmtDate(d)) + '</button>: <b>' + esc(t('st_' + x.status)) + '</b>' +
+      (x.status === 'moved' ? ' ' + esc(t('occMovedTo', { d: fmtR(occRange(ev, occOf(ev, d))) })) : '') + '</li>';
+  }).join('');
+  const o = rep && state.editingOcc ? occOf(ev, state.editingOcc) : null;
+  $('#occWrap').hidden = !o;
+  if (!o) return;
+  $('#occTitle').textContent = t('occTitle', { d: fmtR(occRange(ev, o)), s: t('st_' + o.st) });
+  $('#occDate').value = n2d(o.s);
+  $('#btnOccDone').hidden = o.st === 'done' || ev.status === 'cancelled';
+  $('#btnOccCancel').hidden = o.st === 'cancelled';
+  $('#btnOccMove').hidden = ev.status === 'cancelled';
+  $('#btnOccRestore').hidden = !ex[o.occ];
+}
+// Buttons in the occurrence box: change only the meeting that was clicked.
+async function occAction(act) {
+  const id = state.editingId, ev = state.wheel.events.find(e => e.id === id), date = state.editingOcc;
+  const o = ev && date && occOf(ev, date);
+  if (!o) return;
+  const x = exceptionMap(ev)[date];
+  if (act === 'done') setOccurrence(id, date, { status: 'done' });
+  else if (act === 'cancel') {
+    const reason = await askReason('cancelled', ev.title + ', ' + fmtDate(n2d(o.s)), null);
+    if (reason === null) return;
+    setOccurrence(id, date, { status: 'cancelled' }, reason);
+  } else if (act === 'move' || act === 'restore') {
+    const s = act === 'restore' ? date : $('#occDate').value;
+    if (!isDate(s)) { $('#evError').textContent = t('errStart'); return; }
+    const len = o.e - o.s - 1, change = s === date ? null : { status: 'moved', start: s };
+    if (change && ev.kind === 'span') change.end = n2d(d2n(s) + len);
+    const to = occRange(ev, { s: d2n(s), e: d2n(s) + len + 1 }), from = occRange(ev, o);
+    let reason;
+    if (from.start !== to.start) {
+      reason = await askReason('moved', ev.title, [fmtR(from), fmtR(to)]);
+      if (reason === null) return;
+    } else if (act === 'move' && (!x || x.status !== 'moved')) return; // same date: nothing to move
+    if (!change && !x) return;
+    setOccurrence(id, date, change, reason);
+  }
+  openEditor(id);
 }
 
 async function submitEvent(forceCancel) {
@@ -1883,11 +2240,18 @@ async function submitEvent(forceCancel) {
     status: forceCancel ? 'cancelled' : f.status.value,
     recurrence: f.recurrence.value, owner: f.owner.value.trim() || undefined, notes: f.notes.value.trim() || undefined
   };
+  const rep = v.recurrence === 'weekly' || v.recurrence === 'monthly', iv = +f.interval.value;
+  v.interval = rep && iv !== 1 ? iv : undefined;
+  v.monthlyBy = rep && v.recurrence === 'monthly' && !span && f.monthlyBy.value === 'weekday' ? 'weekday' : undefined;
+  v.until = rep && f.until.value ? f.until.value : undefined;
   // From-to on one day needs the end after the start; a continuous span over several days does not.
   const sameDay = !span || timing === 'daily' || v.end === v.start;
   const err = !w.rings.length ? t('errRing') : !v.title ? t('errTitle') : !isDate(v.start) ? t('errStart')
     : span && (!isDate(v.end) || v.end < v.start) ? t('errEnd')
-      : timed && (!isTime(v.startTime) || !isTime(v.endTime) || (sameDay && v.endTime <= v.startTime)) ? t('errTime') : '';
+      : timed && (!isTime(v.startTime) || !isTime(v.endTime) || (sameDay && v.endTime <= v.startTime)) ? t('errTime')
+        : rep && !(Number.isInteger(iv) && iv >= 1 && iv <= 52) ? t('errInterval')
+          : rep && v.until && (!isDate(v.until) || v.until < v.start) ? t('errUntil')
+            : rep && span && d2n(v.end) - d2n(v.start) >= (v.recurrence === 'weekly' ? 7 * iv : 28 * iv) ? t('errRepeatLong') : '';
   $('#evError').textContent = err;
   if (err) return;
   // The first time someone enters a time, fix the wheel's time zone so exports stay right for everyone.
@@ -1900,7 +2264,7 @@ async function submitEvent(forceCancel) {
     openEditor(ev.id);
     return;
   }
-  const old = w.events.find(e => e.id === id);
+  const old = w.events.find(e => e.id === id), snap = Object.assign({}, old); // old is changed in place by commit
   const before = range(old), after = range(v);
   // A new date or a new time both count as a move and need a reason.
   const datesChanged = ['start', 'end', 'startTime', 'endTime', 'timing'].some(k => before[k] !== after[k]);
@@ -1925,8 +2289,26 @@ async function submitEvent(forceCancel) {
     Object.keys(v).forEach(k => { if (v[k] === undefined) delete ev[k]; else ev[k] = v[k]; });
     delete ev.placeholder; // edited by a person: no longer a template placeholder
     if (ev.status !== 'moved') { delete ev.prevStart; delete ev.prevEnd; }
+    keepExceptions(ev, snap);
   }, { log: logEntry(Object.assign({}, old, { title: v.title }), action, Object.assign(datesChanged || action !== 'edited' ? { before, after } : {}, reason ? { reason } : {})) });
   openEditor(id);
+}
+// After the series itself changes: when only its start moved (same rule), each single change follows
+// to the same meeting of the moved series (the 3rd stays the 3rd); then those that no longer match a
+// repeat are dropped.
+function keepExceptions(ev, old) {
+  if (!pIsRepeat(ev) || !Array.isArray(ev.exceptions)) { delete ev.exceptions; return; }
+  const follow = ev.recurrence === old.recurrence && pInterval(ev) === pInterval(old) && ev.monthlyBy === old.monthlyBy &&
+    ev.start !== old.start && isDate(old.start);
+  const list = ev.exceptions.map(x => {
+    if (!follow || !x || !isRepeatStart(old, x.date)) return x;
+    const k = repeatStarts(Object.assign({}, old, { until: undefined }), old.start, x.date).length - 1;
+    const d = repeatStarts(Object.assign({}, ev, { until: undefined }), ev.start, '9999-12-31', k + 1)[k];
+    if (!d) return x;
+    const sh = s => (isDate(s) ? n2d(d2n(s) + d2n(d) - d2n(x.date)) : s);
+    return Object.assign({}, x, { date: d }, x.start ? { start: sh(x.start) } : {}, x.end ? { end: sh(x.end) } : {});
+  }).filter(x => x && isRepeatStart(ev, x.date));
+  if (list.length) ev.exceptions = list; else delete ev.exceptions;
 }
 function range(e) {
   const r = { start: e.start };
@@ -2144,6 +2526,8 @@ function createFromTemplate(tid, title, yearStart) {
     if (addYears(o.start, k) < ws) k++;
     o.start = addYears(o.start, k);
     if (isDate(o.end)) o.end = addYears(o.end, k);
+    if (isDate(o.until)) o.until = addYears(o.until, k);
+    delete o.exceptions; // single changes belong to the template's year, not the new one
   };
   w.events.forEach(move);
   (w.settings.periods || []).forEach(move);
@@ -2173,6 +2557,26 @@ function cancelEvent(id, reason) {
   const old = state.wheel.events.find(e => e.id === id);
   commit(w => { const ev = w.events.find(e => e.id === id); ev.status = 'cancelled'; delete ev.placeholder; },
     { log: logEntry(old, 'cancelled', { before: range(old), after: range(old), reason }) });
+}
+// One meeting of a weekly or monthly event, kept in ev.exceptions under its original date:
+// change = { status: 'done' } or { status: 'cancelled' } or { status: 'moved', start, end (spans) },
+// or null to put it back as in the series. Moving and cancelling need a reason, like whole events.
+function setOccurrence(id, date, change, reason) {
+  const old = state.wheel.events.find(e => e.id === id), o = occOf(old, date);
+  if (!o) return;
+  const len = o.e - o.s - 1, before = occRange(old, o);
+  const s = change && change.status === 'moved' ? d2n(change.start) : d2n(date);
+  const e = change && change.status === 'moved' && old.kind === 'span' && isDate(change.end) ? d2n(change.end) : s + len;
+  const after = occRange(old, { s, e: e + 1 });
+  const action = change && change.status === 'cancelled' ? 'cancelled' : before.start !== after.start || before.end !== after.end ? 'moved' : 'edited';
+  commit(w => {
+    const ev = w.events.find(x => x.id === id);
+    const list = (ev.exceptions || []).filter(x => x.date !== date);
+    if (change) list.push(Object.assign({ date }, change));
+    list.sort((a, b) => (a.date < b.date ? -1 : 1));
+    if (list.length) ev.exceptions = list; else delete ev.exceptions;
+    delete ev.placeholder;
+  }, { log: logEntry(old, action, Object.assign({ before, after }, reason ? { reason } : {})) });
 }
 function markDone(id) {
   const old = state.wheel.events.find(e => e.id === id);
@@ -2221,7 +2625,7 @@ function startReview() {
   rv.q = q; rv.i = 0; rv.mode = null; rv.items = [];
   state.wheel.events.forEach(ev => {
     if (ev.status === 'cancelled') return;
-    occurrences(ev, q.s, q.e).forEach(o => rv.items.push({ id: ev.id, s: o.s, e: o.e, outcome: null }));
+    occurrences(ev, q.s, q.e).forEach(o => { if (o.st !== 'cancelled') rv.items.push({ id: ev.id, s: o.s, e: o.e, occ: o.occ, outcome: null }); });
   });
   rv.items.sort((a, b) => a.s - b.s);
   $('#rvTitle').textContent = t('reviewTitle', { q: q.label });
@@ -2248,12 +2652,14 @@ function renderReview() {
   if (!ev) { it.outcome = 'skipped'; rv.i++; renderReview(); return; }
   const ring = state.wheel.rings.find(r => r.id === ev.ringId) || { name: '?', color: '#888' };
   const span = ev.kind === 'span', occStart = n2d(it.s), occEnd = span ? n2d(it.e - 1) : '';
+  const oc = it.occ ? occOf(ev, it.occ) : null, curSt = oc ? oc.st : ev.status;
   $('#rvProgress').textContent = t('rvProgress', { i: rv.i + 1, n });
   let html = '<div class="rv-card" style="border-left-color:' + esc(ring.color) + '">' +
     '<div class="meta"><span class="dot" style="background:' + esc(ring.color) + '"></span>' + esc(ring.name) + '</div>' +
     '<h3>' + esc(ev.title) + '</h3>' +
-    '<div class="meta">' + esc([fmtR({ start: occStart, end: occEnd, startTime: ev.startTime, endTime: ev.endTime, timing: ev.timing }), t('kind_' + ev.kind), ev.recurrence === 'yearly' ? t('repeatsYearly') : ''].filter(Boolean).join(' · ')) + '</div>' +
-    '<div class="meta">' + esc(t('rvCurrent', { s: t('st_' + ev.status) })) + (ev.owner ? ' · ' + esc(t('owner', { o: ev.owner })) : '') + '</div>' +
+    '<div class="meta">' + esc([fmtR({ start: occStart, end: occEnd, startTime: ev.startTime, endTime: ev.endTime, timing: ev.timing }), t('kind_' + ev.kind), repeatText(ev)].filter(Boolean).join(' · ')) + '</div>' +
+    '<div class="meta">' + esc(t('rvCurrent', { s: t('st_' + curSt) })) + (ev.owner ? ' · ' + esc(t('owner', { o: ev.owner })) : '') + '</div>' +
+    (it.occ ? '<div class="meta">' + esc(t('rvOnlyThis')) + '</div>' : '') +
     (ev.notes ? '<div class="notes">' + esc(ev.notes) + '</div>' : '') +
     (it.outcome ? '<div class="meta"><b>' + esc(t('rvOut_' + it.outcome)) + '</b></div>' : '') + '</div>';
   if (rv.mode === 'move') {
@@ -2267,7 +2673,7 @@ function renderReview() {
   } else {
     html += '<div class="btns"><button data-rv="confirm" class="primary">' + esc(t('rvConfirm')) + '</button>' +
       '<button data-rv="move">' + esc(t('rvMove')) + '</button><button data-rv="cancel">' + esc(t('cancelEvent')) + '</button>' +
-      (ev.status !== 'done' ? '<button data-rv="done">' + esc(t('rvDone')) + '</button>' : '') + '</div>';
+      (curSt !== 'done' ? '<button data-rv="done">' + esc(t('rvDone')) + '</button>' : '') + '</div>';
   }
   html += '<div class="btns rv-nav"><button data-rv="back"' + (rv.i === 0 ? ' disabled' : '') + '>' + esc(t('rvPrev')) + '</button>' +
     '<button data-rv="skip">' + esc(t(rv.i === n - 1 ? 'rvFinish' : 'rvSkip')) + '</button></div>';
@@ -2286,7 +2692,7 @@ function reviewAction(act) {
   if (act === 'confirm') { it.outcome = 'confirmed'; next(); }
   else if (act === 'move' || act === 'cancel') { rv.mode = act; renderReview(); }
   else if (act === 'mode-none') { rv.mode = null; renderReview(); }
-  else if (act === 'done') { markDone(it.id); it.outcome = 'done'; next(); }
+  else if (act === 'done') { if (it.occ) setOccurrence(it.id, it.occ, { status: 'done' }); else markDone(it.id); it.outcome = 'done'; next(); }
   else if (act === 'skip') { if (!it.outcome) it.outcome = 'skipped'; next(); }
   else if (act === 'back') { rv.i = Math.max(0, rv.i - 1); rv.mode = null; renderReview(); }
   else if (act === 'close') { $('#dlgReview').close(); }
@@ -2296,14 +2702,21 @@ function reviewAction(act) {
     if (!isDate(s) || (span && (!isDate(e) || e < s))) { $('#rvErr').textContent = !isDate(s) ? t('errStart') : t('errEnd'); return; }
     const reason = reasonOk();
     if (!reason) return;
-    // Shift the base event by the same amount, so moving one occurrence of a yearly event works too.
-    const ds = d2n(s) - it.s, de = span ? d2n(e) - (it.e - 1) : 0;
-    moveEvent(ev.id, n2d(d2n(ev.start) + ds), span ? n2d(d2n(ev.end) + de) : undefined, reason);
+    if (it.occ) {
+      // A weekly or monthly meeting: move only this one.
+      const change = s === it.occ && (!span || d2n(e) - d2n(s) === d2n(ev.end) - d2n(ev.start)) ? null : Object.assign({ status: 'moved', start: s }, span ? { end: e } : {});
+      setOccurrence(ev.id, it.occ, change, reason);
+      it.s = d2n(s); it.e = span ? d2n(e) + 1 : it.s + 1;
+    } else {
+      // Shift the base event by the same amount, so moving one occurrence of a yearly event works too.
+      const ds = d2n(s) - it.s, de = span ? d2n(e) - (it.e - 1) : 0;
+      moveEvent(ev.id, n2d(d2n(ev.start) + ds), span ? n2d(d2n(ev.end) + de) : undefined, reason);
+    }
     it.outcome = 'moved'; next();
   } else if (act === 'do-cancel') {
     const reason = reasonOk();
     if (!reason) return;
-    cancelEvent(it.id, reason);
+    if (it.occ) setOccurrence(it.id, it.occ, { status: 'cancelled' }, reason); else cancelEvent(it.id, reason);
     it.outcome = 'cancelled'; next();
   } else if (act === 'stamp') {
     const review = { quarter: rv.q.label, date: TODAY };
@@ -2361,7 +2774,7 @@ function renderList() {
       '<td class="nowrap">' + esc(fmtDate(e.start)) + (e.startTime ? '<br><span class="hint">' + esc(listTime(e, 'start')) + '</span>' : '') + '</td>' +
       '<td class="nowrap">' + esc(e.kind === 'span' ? fmtDate(e.end) : '') + (e.kind === 'span' && e.timing === 'continuous' ? '<br><span class="hint">' + esc(e.endTime) + '</span>' : '') + '</td>' +
       '<td><span class="badge ' + esc(e.status) + '">' + esc(t('st_' + e.status)) + '</span></td>' +
-      '<td>' + esc(e.recurrence === 'yearly' ? t('rec_yearly') : '') + '</td>' +
+      '<td>' + esc(e.recurrence === 'yearly' ? t('rec_yearly') : repeatText(e)) + '</td>' +
       '<td>' + esc(e.owner || '') + '</td></tr>';
   }).join('') : '<tr class="empty-row"><td colspan="' + LIST_COLS.length + '">' + esc(t('noMatch')) + '</td></tr>';
   $('#listCount').textContent = t('nEvents', { n: rows.length, total: w.events.length });
@@ -2485,7 +2898,8 @@ function openImport(text, name) {
       const tm = icsLocalTimes(it, wheelTz());
       return { id: icsItemId(it), title: it.title, start: tm ? tm.start : it.start, end: tm ? tm.end : it.end,
         startTime: tm ? tm.startTime : '', endTime: tm ? tm.endTime : '', timing: tm ? tm.timing : '',
-        status: it.status, recurrence: it.recurrence, notes: it.notes, ringId: ring ? ring.id : null };
+        status: it.status, recurrence: it.recurrence, interval: it.interval, monthlyBy: it.monthlyBy, until: it.until, exceptions: it.exceptions,
+        notes: it.notes, ringId: ring ? ring.id : null };
     });
   } else {
     const res = csvToItems(text), unknown = new Set();
@@ -2494,7 +2908,8 @@ function openImport(text, name) {
       const ring = it.ring ? byName(it.ring) : null;
       if (it.ring && !ring) unknown.add(it.ring);
       return { id: genId('e'), title: it.title, start: it.start, end: it.end, startTime: it.startTime, endTime: it.endTime, timing: it.timing,
-        status: it.status, recurrence: it.recurrence, notes: it.notes, owner: it.owner, ringId: ring ? ring.id : null };
+        status: it.status, recurrence: it.recurrence, interval: it.interval, monthlyBy: it.monthlyBy, until: it.until,
+        notes: it.notes, owner: it.owner, ringId: ring ? ring.id : null };
     });
     unknown.forEach(r => warnings.push(t('csvRingUnknown', { ring: r })));
   }
@@ -2507,7 +2922,8 @@ function openImport(text, name) {
     '<tr><td><input type="checkbox" data-i="' + i + '"' + (it.include ? ' checked' : '') + ' aria-label="' + esc(t('ariaImport', { name: it.title })) + '"></td>' +
     '<td>' + esc(it.title) + (it.dup ? ' <span class="hint">(' + esc(t('impDup')) + ')</span>' : '') +
     (it.status !== 'planned' ? ' <span class="badge ' + esc(it.status) + '">' + esc(t('st_' + it.status)) + '</span>' : '') + '</td>' +
-    '<td class="nowrap">' + esc(fmtR({ start: it.start, end: it.end, startTime: it.startTime, endTime: it.endTime, timing: it.timing })) + (it.recurrence === 'yearly' ? '<br><span class="hint">' + esc(t('rec_yearly')) + '</span>' : '') + '</td>' +
+    '<td class="nowrap">' + esc(fmtR({ start: it.start, end: it.end, startTime: it.startTime, endTime: it.endTime, timing: it.timing })) +
+    (repeatText(Object.assign({ kind: it.end !== it.start ? 'span' : 'milestone' }, it)) ? '<br><span class="hint">' + esc(repeatText(Object.assign({ kind: it.end !== it.start ? 'span' : 'milestone' }, it))) + '</span>' : '') + '</td>' +
     '<td><select data-i="' + i + '" aria-label="' + esc(t('ariaRingFor', { name: it.title })) + '">' + ringOpts + '</select></td></tr>').join('');
   $$('#impRows select').forEach(s => { const it = imp.items[+s.dataset.i]; s.value = it.ringId || $('#impAll').value; it.ringId = s.value; });
   $('#impWarnings').innerHTML = warnings.map(x => '<li>' + esc(x) + '</li>').join('');
@@ -2536,6 +2952,15 @@ function doImport() {
         if (!w.settings.timeZone) w.settings.timeZone = wheelTz();
       }
       ev.status = it.status; ev.recurrence = it.recurrence;
+      if (pIsRepeat(ev)) {
+        // Weekly and monthly: interval, weekday of the month, end date and single changes, in key order.
+        if (it.interval > 1) ev.interval = it.interval;
+        if (it.monthlyBy === 'weekday' && ev.kind === 'milestone') ev.monthlyBy = 'weekday';
+        if (isDate(it.until)) ev.until = it.until;
+        const exc = (it.exceptions || []).map(x => Object.assign({ date: x.date, status: x.status }, x.status === 'moved' ? { start: x.start } : {},
+          x.status === 'moved' && ev.kind === 'span' ? { end: x.end } : {})).filter(x => isRepeatStart(ev, x.date));
+        if (exc.length) ev.exceptions = exc;
+      }
       if (it.owner) ev.owner = it.owner;
       if (it.notes) ev.notes = it.notes;
       w.events.push(ev);
@@ -2644,25 +3069,25 @@ function init() {
   const svg = $('#wheel');
   svg.addEventListener('click', e => {
     const g = e.target.closest('[data-id]');
-    if (g) { openEditor(g.dataset.id); return; }
+    if (g) { openEditor(g.dataset.id, null, g.dataset.occ || null); return; }
     const rb = e.target.closest('[data-ring]');
     if (rb) openEditor(null, { ringId: rb.dataset.ring, start: svgDate(e) });
   });
   svg.addEventListener('mousemove', e => {
     const g = e.target.closest('[data-id]');
-    if (g) { showTip(g.dataset.id, e.clientX, e.clientY); highlight(g.dataset.id); } else { hideTip(); highlight(null); }
+    if (g) { showTip(g.dataset.id, e.clientX, e.clientY, g.dataset.occ); highlight(g.dataset.id); } else { hideTip(); highlight(null); }
   });
   svg.addEventListener('mouseleave', () => { hideTip(); highlight(null); });
   svg.addEventListener('focusin', e => {
     const g = e.target.closest('[data-id]');
     if (!g) return;
     const r = g.getBoundingClientRect();
-    showTip(g.dataset.id, r.right, r.bottom); highlight(g.dataset.id);
+    showTip(g.dataset.id, r.right, r.bottom, g.dataset.occ); highlight(g.dataset.id);
   });
   svg.addEventListener('focusout', () => { hideTip(); highlight(null); });
   svg.addEventListener('keydown', e => {
     const g = e.target.closest('[data-id]');
-    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openEditor(g.dataset.id); }
+    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openEditor(g.dataset.id, null, g.dataset.occ || null); }
   });
 
   $('#btnNew').onclick = openNewDialog;
@@ -2736,6 +3161,15 @@ function init() {
   const form = $('#evForm');
   form.addEventListener('submit', e => { e.preventDefault(); submitEvent(false); });
   form.addEventListener('change', e => { if (e.target.name === 'kind' || e.target.name === 'timing') syncKind(); });
+  form.addEventListener('input', e => { if (['recurrence', 'interval', 'monthlyBy', 'until', 'start'].includes(e.target.name)) syncRepeat(); });
+  $('#btnOccMove').onclick = () => occAction('move');
+  $('#btnOccCancel').onclick = () => occAction('cancel');
+  $('#btnOccDone').onclick = () => occAction('done');
+  $('#btnOccRestore').onclick = () => occAction('restore');
+  $('#excList').addEventListener('click', e => {
+    const b = e.target.closest('[data-occ]');
+    if (b) openEditor(state.editingId, null, b.dataset.occ);
+  });
   $('#btnEvCancelEvent').onclick = () => submitEvent(true);
   $('#btnEvDelete').onclick = deleteEvent;
 

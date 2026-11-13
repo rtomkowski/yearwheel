@@ -94,7 +94,16 @@ Click an existing event to edit it. The editor opens on the right.
     from lunch on Monday to lunch on Wednesday).
 - **Status:** planned, moved, done or cancelled.
 - **Repeats:** choose **every year** for things that come back, such as an annual report. They
-  then appear in every year of the wheel.
+  then appear in every year of the wheel. Choose **weekly** or **monthly** for meetings, such as a
+  monthly research group meeting or a department meeting every second month:
+  - **Every how many weeks / months:** 1 for every week or month, 2 for every second, and so on.
+  - **On** (monthly milestones): the same date each month (for example the 20th), or the same
+    weekday of the month (for example the second Tuesday). Months without the date, such as the
+    31st, are skipped.
+  - **Until** (optional): the last day the meeting can take place. Leave it empty to keep going.
+
+  The line under the fields reads the rule back, for example "Every 2 months, until 30 Jun 2027".
+  Each meeting is drawn on the wheel; the label is shown once per series.
 
 Click **Apply** to save the change to the wheel (remember to **Save** the file afterwards).
 
@@ -102,6 +111,13 @@ Click **Apply** to save the change to the wheel (remember to **Save** the file a
 or click **Cancel event**, you are asked why. The reason is kept in the change log, so everyone can
 see later what changed and why. **History** at the bottom of the editor shows the changes to that
 event. **Delete** removes an event completely (this is also logged).
+
+**One meeting of a series.** Click a single meeting on the wheel: the editor shows **This
+occurrence** with its date and buttons that change only that meeting: **Move this one** (to the
+new date above the buttons), **Cancel this one**, **Mark done**, and **Restore** to put it back as
+in the series. Moving and cancelling ask for a reason here too. **Changed occurrences** lists the
+meetings that differ from the series; click a date to select it. The other fields in the editor
+change the whole series: if you move the series' start, the changed meetings follow along.
 
 Times are in the wheel's **time zone**, shown under the time fields. It is set the first time you
 enter a time and can be changed under Settings.
@@ -165,6 +181,9 @@ The review goes through each event in the quarter, one at a time:
 - **Cancel event:** give a reason.
 - **Mark done:** the event is finished.
 
+For weekly and monthly meetings each meeting in the quarter is its own step, and the choices apply
+to that meeting only.
+
 At the end, enter your name and an optional note and click **Stamp quarter as reviewed**. The
 banner disappears until the next quarter starts. Remember to **Save** afterwards.
 
@@ -199,7 +218,9 @@ not save over each other's changes.
   drag a calendar to the desktop on a Mac). In Google Calendar: Settings > Import and export >
   Export, then unzip. A dialog lists the events found: choose a ring for each, or one ring for
   all, and untick anything you do not want. Events already in the wheel start unticked, so
-  importing the same file twice does not create copies. Meetings keep their times.
+  importing the same file twice does not create copies. Meetings keep their times. Weekly and
+  monthly series keep their rule, end date and cancelled or moved single meetings (a series on
+  several weekdays, such as Monday and Wednesday, keeps only the first day).
 - **Spreadsheet (.csv)** from Excel, Numbers, Google Sheets or similar. See "The spreadsheet
   format" below. The import dialog lists any rows it could not read, with their line numbers.
 
@@ -208,7 +229,9 @@ not save over each other's changes.
 - **Calendar file (.ics):** send it to colleagues so they can add all events to Outlook or Google
   Calendar. Whole-day events become all-day entries; timed events become meetings at the right
   local time, even for colleagues in another time zone; spans with the same hours each day become
-  a daily meeting; lunch-to-lunch spans become one continuous event.
+  a daily meeting; lunch-to-lunch spans become one continuous event. Weekly and monthly meetings
+  become one recurring series that stays at the same local time across summer and winter time;
+  cancelled and moved single meetings are included.
 - **Spreadsheet (.csv):** all events in a table you can open in Excel, edit, and import again.
   It uses exactly the format below, so a wheel can go out to a spreadsheet and back.
 - **SVG image:** a sharp picture for documents and slides.
@@ -235,19 +258,22 @@ any order, and empty cells are fine.
 | start time | HH:MM, for an event with a time | 13:00 |
 | end time | HH:MM | 15:00 |
 | timing | only for several days with times: `daily` (same hours each day) or `continuous` (from the first day to the last, for example lunch to lunch) | daily |
-| repeats | `yearly` for events that come back every year; empty means once | yearly |
+| repeats | `yearly`, `weekly`, `monthly`, `every 2 weeks`, `every 3 months`; add `by weekday` to a monthly value for the same weekday of the month (the 2nd Tuesday); empty means once | every 2 months |
+| until | last day of a weekly or monthly repeat, YYYY-MM-DD; empty means no end | 2027-06-30 |
 | owner | who is responsible | Head of department |
 | notes | any text | Room M2 |
 
 Examples of complete rows:
 
 ```
-title;start;end;ring;status;start time;end time;timing;repeats;owner;notes
-Budget draft;2027-02-01;2027-03-15;Department;planned;;;;;Head of department;
-Board meeting;2027-04-12;;Department;planned;13:00;15:00;;;;
-Course week;2027-03-02;2027-03-04;Education;planned;09:00;16:00;daily;;;
-Writing retreat;2027-05-10;2027-05-12;Research;planned;12:00;12:00;continuous;;;Lunch to lunch
-Annual report due;2027-02-26;;Department;planned;;;;yearly;;
+title;start;end;ring;status;start time;end time;timing;repeats;until;owner;notes
+Budget draft;2027-02-01;2027-03-15;Department;planned;;;;;;Head of department;
+Board meeting;2027-04-12;;Department;planned;13:00;15:00;;;;;
+Course week;2027-03-02;2027-03-04;Education;planned;09:00;16:00;daily;;;;
+Writing retreat;2027-05-10;2027-05-12;Research;planned;12:00;12:00;continuous;;;;Lunch to lunch
+Annual report due;2027-02-26;;Department;planned;;;;yearly;;;
+Research group meeting;2027-01-12;;Research;planned;10:00;11:00;;monthly by weekday;2027-06-30;;
+Department meeting;2027-01-20;;Department;planned;14:00;15:30;;every 2 months;;;
 ```
 
 Good to know:
@@ -256,8 +282,11 @@ Good to know:
   start with a `sep=;` line, which tells Excel how to split the columns; you can leave it in.
 - Text that itself contains a semicolon, comma, quote or line break must be in double quotes,
   which Excel does automatically.
-- Swedish column names (titel, slut, starttid, sluttid, upprepas, ansvarig, anteckningar) and
-  status words (planerad, flyttad, klar, inställd) are accepted too.
+- Swedish column names (titel, slut, starttid, sluttid, upprepas, till och med, ansvarig,
+  anteckningar), status words (planerad, flyttad, klar, inställd) and repeat words (varje vecka,
+  varannan månad, var 3:e månad, på veckodag) are accepted too.
+- Single changed meetings of a series are not part of the spreadsheet; use the calendar file
+  (.ics) or the wheel file to keep them.
 - Importing the same file again does not create copies: rows with the same title and start date as
   an existing event start unticked.
 

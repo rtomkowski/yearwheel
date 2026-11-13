@@ -115,6 +115,18 @@
       "placeholder": true
     },
     {
+      "id": "dept-meeting",
+      "ringId": "board",
+      "title": "Department meeting (edit me)",
+      "kind": "milestone",
+      "start": "2027-01-20",
+      "status": "planned",
+      "recurrence": "monthly",
+      "interval": 2,
+      "notes": "Placeholder date. Edit me.",
+      "placeholder": true
+    },
+    {
       "id": "budget-draft",
       "ringId": "budget",
       "title": "Budget draft for next year (edit me)",

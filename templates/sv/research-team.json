@@ -217,6 +217,18 @@
       "recurrence": "yearly",
       "notes": "Platshållardatum. Ändra mig.",
       "placeholder": true
+    },
+    {
+      "id": "team-meeting",
+      "ringId": "team",
+      "title": "Forskargruppsmöte (ändra mig)",
+      "kind": "milestone",
+      "start": "2027-01-12",
+      "status": "planned",
+      "recurrence": "monthly",
+      "monthlyBy": "weekday",
+      "notes": "Platshållardatum. Ändra mig.",
+      "placeholder": true
     }
   ],
   "reviews": [],

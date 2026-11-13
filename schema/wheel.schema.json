@@ -97,7 +97,15 @@
         "endTime": { "$ref": "#/$defs/time" },
         "timing": { "enum": ["daily", "continuous"], "description": "Spans with times: the same hours each day, or from the start time on the first day to the end time on the last day." },
         "status": { "enum": ["planned", "moved", "cancelled", "done"] },
-        "recurrence": { "enum": ["none", "yearly"] },
+        "recurrence": { "enum": ["none", "weekly", "monthly", "yearly"] },
+        "interval": { "type": "integer", "minimum": 1, "maximum": 52, "description": "Weekly and monthly: every N weeks or months; omitted means 1." },
+        "monthlyBy": { "enum": ["date", "weekday"], "description": "Monthly milestones: 'weekday' repeats on the same weekday in the same week of the month (the 2nd Tuesday; the last one when the start is in the 5th week). Omitted means the same date." },
+        "until": { "$ref": "#/$defs/date", "description": "Weekly and monthly: the last date a repeat may start on. Omitted means no end." },
+        "exceptions": {
+          "type": "array",
+          "description": "Weekly and monthly: single occurrences that differ from the series, keyed by their original start date.",
+          "items": { "$ref": "#/$defs/exception" }
+        },
         "owner": { "type": "string" },
         "notes": { "type": "string" },
         "placeholder": { "type": "boolean" },
@@ -119,6 +127,19 @@
           "then": { "not": { "required": ["timing"] } }
         }
       ]
+    },
+    "exception": {
+      "type": "object",
+      "required": ["date", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "date": { "$ref": "#/$defs/date" },
+        "status": { "enum": ["done", "cancelled", "moved"] },
+        "start": { "$ref": "#/$defs/date" },
+        "end": { "$ref": "#/$defs/date" }
+      },
+      "if": { "properties": { "status": { "const": "moved" } }, "required": ["status"] },
+      "then": { "required": ["start"] }
     },
     "review": {
       "type": "object",

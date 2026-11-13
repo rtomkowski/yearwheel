@@ -8,7 +8,8 @@ Usage: python tools/build_demo.py
 Everything in it is fictional: a made-up department, roles instead of names, invented courses,
 projects and dates. It shows most features: five rings, spans and milestones, times (one day,
 the same hours each day, and lunch to lunch), yearly items, moved / cancelled / done events with
-reasons in the change log, study periods and week numbers.
+reasons in the change log, meetings that repeat monthly or every second month (with single
+meetings done, moved and cancelled), study periods and week numbers.
 """
 
 import os
@@ -19,7 +20,7 @@ from wheellib import ROOT, dump_wheel, full_check  # noqa: E402
 
 
 def ev(eid, ring, title, start, end=None, status="planned", rec="none", owner=None, notes=None,
-       times=None, timing=None, prev=None):
+       times=None, timing=None, prev=None, interval=1, monthly_by=None, until=None, exceptions=None):
     e = {"id": eid, "ringId": ring, "title": title, "kind": "span" if end else "milestone", "start": start}
     if end:
         e["end"] = end
@@ -29,6 +30,14 @@ def ev(eid, ring, title, start, end=None, status="planned", rec="none", owner=No
             e["timing"] = timing or "daily"
     e["status"] = status
     e["recurrence"] = rec
+    if interval > 1:
+        e["interval"] = interval
+    if monthly_by:
+        e["monthlyBy"] = monthly_by
+    if until:
+        e["until"] = until
+    if exceptions:
+        e["exceptions"] = exceptions
     if owner:
         e["owner"] = owner
     if notes:
@@ -58,6 +67,11 @@ def build():
         ev("council-call", "research", "Research council call deadline", "2027-03-16", rec="yearly"),
         ev("writing-retreat", "research", "Writing retreat", "2027-04-12", "2027-04-14",
            times=("12:00", "12:00"), timing="continuous", notes="Lunch to lunch, off site."),
+        ev("group-meeting", "research", "Research group meeting", "2026-09-08", times=("10:00", "11:00"),
+           rec="monthly", monthly_by="weekday", until="2027-06-30", owner="Research group",
+           exceptions=[{"date": "2026-09-08", "status": "done"}, {"date": "2026-10-13", "status": "done"},
+                       {"date": "2026-12-08", "status": "cancelled"},
+                       {"date": "2027-03-09", "status": "moved", "start": "2027-03-16"}]),
         ev("conference", "research", "International conference", "2027-06-07", "2027-06-10",
            times=("09:00", "17:30"), timing="daily", rec="yearly"),
         # Education
@@ -80,6 +94,8 @@ def build():
            notes="Moved to the afternoon slot."),
         ev("christmas-lunch", "admin", "Christmas lunch", "2026-12-17", times=("11:30", "14:00"), status="cancelled"),
         ev("board-feb", "admin", "Department board meeting", "2027-02-17", times=("13:15", "15:00")),
+        ev("staff-meeting", "admin", "Staff meeting", "2026-09-30", times=("14:00", "15:00"), rec="monthly", interval=2,
+           owner="Head of department", exceptions=[{"date": "2026-09-30", "status": "done"}]),
         ev("annual-report", "admin", "Annual report due", "2027-02-26", rec="yearly", owner="Administrator"),
         ev("appraisals", "admin", "Performance reviews", "2027-03-01", "2027-04-16", rec="yearly", owner="Head of department"),
         ev("budget-draft", "admin", "Budget draft for next year", "2027-05-03", "2027-06-11", rec="yearly"),
@@ -112,9 +128,21 @@ def build():
          "action": "cancelled", "before": {"start": "2026-12-17", "startTime": "11:30", "endTime": "14:00"},
          "after": {"start": "2026-12-17", "startTime": "11:30", "endTime": "14:00"},
          "reason": "Combined with the spring department day instead."},
+        {"timestamp": "2026-10-13T11:05:00Z", "eventId": "group-meeting", "title": "Research group meeting",
+         "action": "edited", "before": {"start": "2026-10-13", "startTime": "10:00", "endTime": "11:00"},
+         "after": {"start": "2026-10-13", "startTime": "10:00", "endTime": "11:00"}},
+        {"timestamp": "2026-10-21T09:40:00Z", "eventId": "group-meeting", "title": "Research group meeting",
+         "action": "cancelled", "before": {"start": "2026-12-08", "startTime": "10:00", "endTime": "11:00"},
+         "after": {"start": "2026-12-08", "startTime": "10:00", "endTime": "11:00"},
+         "reason": "Most of the group is at the project meeting that week."},
+        {"timestamp": "2026-10-21T09:45:00Z", "eventId": "group-meeting", "title": "Research group meeting",
+         "action": "moved", "before": {"start": "2027-03-09", "startTime": "10:00", "endTime": "11:00"},
+         "after": {"start": "2027-03-16", "startTime": "10:00", "endTime": "11:00"},
+         "reason": "Clashes with the exam week; one week later."},
         {"timestamp": "2026-10-30T16:20:00Z", "eventId": "paper-submitted", "title": "Journal paper submitted",
          "action": "edited"},
     ]
+    changelog.sort(key=lambda c: c["timestamp"])
     wheel = {
         "schemaVersion": 1,
         "id": "demo-department-2026-27",

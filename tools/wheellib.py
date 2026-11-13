@@ -207,7 +207,31 @@ def check_rules(wheel: Dict[str, Any]) -> List[str]:
         same_day = e.get("kind") != "span" or e.get("timing") == "daily" or e.get("end") == e.get("start")
         if "startTime" in e and "endTime" in e and same_day and e["endTime"] <= e["startTime"]:
             errors.append("event %s: end time must be after start time" % e.get("id"))
+        errors.extend(_repeat_rules(e))
     errors.extend(check_changelog_rules(wheel))
+    return errors
+
+
+def _repeat_rules(e: Dict[str, Any]) -> List[str]:
+    """Weekly and monthly fields: only on those events, end not before start, exceptions on real dates."""
+    errors = []  # type: List[str]
+    extra = [k for k in ("interval", "monthlyBy", "until", "exceptions") if k in e]
+    if e.get("recurrence") not in ("weekly", "monthly"):
+        if extra:
+            errors.append("event %s: %s only apply to weekly and monthly repeats" % (e.get("id"), ", ".join(extra)))
+        return errors
+    if e.get("until", "9999-12-31") < e.get("start", ""):
+        errors.append("event %s: until is before start" % e.get("id"))
+    seen = set()
+    for x in e.get("exceptions", []):
+        d = x.get("date", "")
+        if d in seen:
+            errors.append("event %s: two exceptions for %s" % (e.get("id"), d))
+        seen.add(d)
+        if not _valid_date(d) or not repeat_starts(e, d, d, 1):
+            errors.append("event %s: exception %s is not one of its dates" % (e.get("id"), d))
+        if x.get("end", "9999-12-31") < x.get("start", ""):
+            errors.append("event %s: exception %s ends before it starts" % (e.get("id"), d))
     return errors
 
 
@@ -223,10 +247,84 @@ def full_check(wheel: Dict[str, Any]) -> List[str]:
     return validate(wheel) + check_rules(wheel)
 
 
+# ---------------------------------------------------------------- repeats within the year
+# Mirrors repeatStarts() in yearwheel.html: recurrence 'weekly' or 'monthly', every `interval` weeks or
+# months (omitted = 1) up to `until` (last allowed start, omitted = no end). Monthly repeats keep the
+# date (months without it are skipped, as in iCalendar) or, with monthlyBy 'weekday' on a milestone,
+# the weekday in the same week of the month (2nd Tuesday; a start in the 5th week means the last one).
+
+_WD = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
+
+
+def _days_in_month(y: int, m: int) -> int:
+    nxt = datetime.date(y + m // 12, m % 12 + 1, 1)
+    return (nxt - datetime.timedelta(days=1)).day
+
+
+def month_week(d: datetime.date):
+    """(weekday with Sunday 0, nth 1 to 4 or -1 for the last) of a date."""
+    n = (d.day + 6) // 7
+    return (d.isoweekday() % 7, -1 if n > 4 else n)
+
+
+def nth_weekday(y: int, m: int, wd: int, nth: int) -> int:
+    if nth < 0:
+        last = _days_in_month(y, m)
+        return last - (datetime.date(y, m, last).isoweekday() % 7 - wd + 7) % 7
+    return 1 + (wd - datetime.date(y, m, 1).isoweekday() % 7 + 7) % 7 + (nth - 1) * 7
+
+
+def _interval(ev: Dict[str, Any]) -> int:
+    try:
+        n = int(ev.get("interval") or 1)
+    except (TypeError, ValueError):
+        return 1
+    return n if 1 <= n <= 52 else 1
+
+
+def repeat_starts(ev: Dict[str, Any], start_from: str, to: str, limit: int = 0) -> List[str]:
+    """Start dates (ISO) of a weekly or monthly event from start_from to `to`, inclusive."""
+    out = []  # type: List[str]
+    if ev.get("recurrence") not in ("weekly", "monthly") or not _valid_date(ev.get("start", "")):
+        return out
+    s = datetime.date.fromisoformat(ev["start"])
+    last = datetime.date.fromisoformat(to)
+    until = ev.get("until", "")
+    if isinstance(until, str) and _valid_date(until) and until < to:
+        last = datetime.date.fromisoformat(until)
+    frm = max(datetime.date.fromisoformat(start_from), s)
+    iv = _interval(ev)
+    if ev["recurrence"] == "weekly":
+        step = 7 * iv
+        d = s + datetime.timedelta(days=-(-(frm - s).days // step) * step)
+        while d <= last and (not limit or len(out) < limit):
+            out.append(d.isoformat())
+            d += datetime.timedelta(days=step)
+        return out
+    by_wd = ev.get("monthlyBy") == "weekday" and ev.get("kind") != "span"
+    wd, nth = month_week(s)
+    k = max(0, ((frm.year - s.year) * 12 + frm.month - s.month) // iv)
+    while not limit or len(out) < limit:
+        mi = s.month - 1 + k * iv
+        yy, mm = s.year + mi // 12, mi % 12 + 1
+        k += 1
+        if (yy, mm) > (last.year, last.month):
+            break
+        day = nth_weekday(yy, mm, wd, nth) if by_wd else s.day
+        if day > _days_in_month(yy, mm):
+            continue
+        d = datetime.date(yy, mm, day)
+        if d > last:
+            break
+        if d >= frm:
+            out.append(d.isoformat())
+    return out
+
+
 # ---------------------------------------------------------------- ICS (iCalendar) parsing
 # Mirrors parseIcs() in yearwheel.html. Handles Outlook and Google exports:
 # CRLF or LF, folded lines, VALUE=DATE all-day events, TZID and UTC date-times,
-# escaped text, RRULE FREQ=YEARLY and STATUS:CANCELLED. Times are dropped: the wheel works in days.
+# escaped text, RRULE (yearly, weekly, monthly, daily), EXDATE, RECURRENCE-ID and STATUS:CANCELLED.
 
 def _unfold(text: str) -> List[str]:
     lines = []  # type: List[str]
@@ -310,9 +408,29 @@ def parse_ics(text: str) -> List[Dict[str, Any]]:
                     events.append(ev)
                 cur = None
             continue
-        if cur is not None and not depth and name not in cur["props"]:
+        if cur is not None and not depth and name == "EXDATE":
+            cur["props"].setdefault("_exdates", []).extend(value.split(","))
+        elif cur is not None and not depth and name not in cur["props"]:
             cur["props"][name] = (value, params)
-    return events
+    # A changed single meeting of a series (RECURRENCE-ID) becomes an exception of that series.
+    out = [e for e in events if "_rid" not in e]
+    for ev in [e for e in events if "_rid" in e]:
+        rid = ev.pop("_rid")
+        master = None
+        if ev["uid"]:
+            master = next((m for m in out if m["uid"] == ev["uid"] and m["recurrence"] in ("weekly", "monthly")), None)
+        if master is None:
+            out.append(ev)
+            continue
+        master["exceptions"] = [x for x in master["exceptions"] if x["date"] != rid]
+        shift = datetime.date.fromisoformat(rid) - datetime.date.fromisoformat(master["start"])
+        same_end = ev["end"] == (datetime.date.fromisoformat(master["end"]) + shift).isoformat()
+        if ev["status"] == "cancelled":
+            master["exceptions"].append({"date": rid, "status": "cancelled"})
+        elif ev["start"] != rid or not same_end:
+            master["exceptions"].append({"date": rid, "status": "moved", "start": ev["start"], "end": ev["end"]})
+        master["exceptions"].sort(key=lambda x: x["date"])
+    return out
 
 
 def _daily_count(rrule: str, start: datetime.date) -> int:
@@ -369,12 +487,40 @@ def _finish_event(props: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                 last -= datetime.timedelta(days=1)
             end = max(last, start)
     rrule = props.get("RRULE", ("", {}))[0].upper()
+    rr = {}  # type: Dict[str, str]
+    for part in rrule.split(";"):
+        if "=" in part:
+            k, _, v = part.partition("=")
+            rr[k.strip()] = v.strip()
     repeat_days = _daily_count(rrule, start)
     if all_day and repeat_days > 1 and end == start:
         end = start + datetime.timedelta(days=repeat_days - 1)  # an all-day event repeated n days = n days
     status = props.get("STATUS", ("", {}))[0].strip().upper()
     cats = props.get("CATEGORIES", ("", {}))[0]
-    return {
+    recurrence = {"YEARLY": "yearly", "MONTHLY": "monthly", "WEEKLY": "weekly"}.get(rr.get("FREQ", ""), "none")
+    interval, monthly_by, until, exceptions = 1, "", "", []  # type: int, str, str, List[Dict[str, str]]
+    if recurrence in ("weekly", "monthly"):
+        if rr.get("INTERVAL", "").isdigit() and 1 <= int(rr["INTERVAL"]) <= 52:
+            interval = int(rr["INTERVAL"])
+        bd = re.match(r"^(-1|\+?[1-4])(SU|MO|TU|WE|TH|FR|SA)$", rr.get("BYDAY", ""))
+        kind = "span" if end != start else "milestone"
+        wd, nth = month_week(start)
+        if recurrence == "monthly" and kind == "milestone" and bd and int(bd.group(1)) == nth and _WD.index(bd.group(2)) == wd:
+            monthly_by = "weekday"
+        u = _ics_dt(rr.get("UNTIL", ""))
+        if u is not None:
+            until = max(u[0], start).isoformat()
+        elif rr.get("COUNT", "").isdigit() and int(rr["COUNT"]) > 0:
+            every = repeat_starts({"start": start.isoformat(), "kind": kind, "recurrence": recurrence,
+                                   "interval": interval, "monthlyBy": monthly_by},
+                                  start.isoformat(), "9999-12-31", int(rr["COUNT"]))
+            until = every[-1] if every else start.isoformat()
+        for v in props.get("_exdates", []):
+            x = _ics_dt(v)
+            if x is not None and not any(e["date"] == x[0].isoformat() for e in exceptions):
+                exceptions.append({"date": x[0].isoformat(), "status": "cancelled"})
+        exceptions.sort(key=lambda e: e["date"])
+    ev = {
         "uid": props.get("UID", ("", {}))[0].strip(),
         "title": _unescape(props.get("SUMMARY", ("", {}))[0]) or "(no title)",
         "start": start.isoformat(),
@@ -383,11 +529,20 @@ def _finish_event(props: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         "endAt": end_at,
         "tz": tz,
         "repeatDays": repeat_days,
-        "recurrence": "yearly" if "FREQ=YEARLY" in rrule else "none",
+        "recurrence": recurrence,
+        "interval": interval,
+        "monthlyBy": monthly_by,
+        "until": until,
+        "exceptions": exceptions,
         "status": "cancelled" if status == "CANCELLED" else "planned",
         "notes": _unescape(props.get("DESCRIPTION", ("", {}))[0]),
         "categories": [c.strip() for c in _unescape(cats).split(",") if c.strip()],
-    }
+    }  # type: Dict[str, Any]
+    if "RECURRENCE-ID" in props:
+        rid = _ics_dt(props["RECURRENCE-ID"][0])
+        if rid is not None:
+            ev["_rid"] = rid[0].isoformat()
+    return ev
 
 
 def stable_id(prefix: str, key: str) -> str:
@@ -442,6 +597,28 @@ def event_times(item: Dict[str, Any], target: Optional[datetime.tzinfo] = None) 
     return out
 
 
+def add_repeat_fields(ev: Dict[str, Any], it: Dict[str, Any]) -> None:
+    """interval, monthlyBy, until and exceptions of a weekly or monthly item, in the app's key order."""
+    if ev["recurrence"] not in ("weekly", "monthly"):
+        return
+    if it.get("interval", 1) > 1:
+        ev["interval"] = it["interval"]
+    if it.get("monthlyBy") == "weekday" and ev["kind"] == "milestone":
+        ev["monthlyBy"] = "weekday"
+    if it.get("until"):
+        ev["until"] = it["until"]
+    exc = []
+    for x in it.get("exceptions", []):
+        y = {"date": x["date"], "status": x["status"]}
+        if x["status"] == "moved":
+            y["start"] = x["start"]
+            if ev["kind"] == "span":
+                y["end"] = x["end"]
+        exc.append(y)
+    if exc:
+        ev["exceptions"] = exc
+
+
 def ics_events_to_wheel_events(items: List[Dict[str, Any]], ring_id: str,
                                target: Optional[datetime.tzinfo] = None) -> List[Dict[str, Any]]:
     out = []
@@ -463,6 +640,7 @@ def ics_events_to_wheel_events(items: List[Dict[str, Any]], ring_id: str,
                 ev["timing"] = times["timing"]
         ev["status"] = it["status"]
         ev["recurrence"] = it["recurrence"]
+        add_repeat_fields(ev, it)
         if it["notes"]:
             ev["notes"] = it["notes"]
         out.append(ev)

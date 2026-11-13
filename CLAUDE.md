@@ -55,6 +55,17 @@
   changelog ranges carry the times. ICS export writes timed milestones in UTC (`...Z`), converted with
   `zonedToUtc` (Intl only, no libraries). Known limit: a yearly timed event uses the UTC time of its
   first date, so a date within days of a DST switch can be an hour off in other years.
+- Repeats within the year: `recurrence` `weekly` or `monthly` with optional `interval` (1 to 52),
+  `monthlyBy: 'weekday'` (milestones only: same weekday in the same week of the month, 5th week =
+  last) and `until` (last allowed start). Dates come from `repeatStarts` (PARSERS block) and
+  `wheellib.repeat_starts`, kept identical. Single meetings live in `exceptions`
+  (`{date, status: done|cancelled|moved, start, end}`, keyed by original date) and are changed only
+  through `setOccurrence()`, which logs like whole events (reason for moved/cancelled). Wheel marks
+  carry `data-occ`; `occurrences()` returns `occ`, `st` and `prev` for them. Moving a series' start
+  maps exceptions by occurrence number (`keepExceptions`). ICS export: RRULE with INTERVAL, BYDAY
+  and UNTIL, timed series in TZID local time with a VTIMEZONE built from Intl (`icsVtimezone`),
+  EXDATE for cancelled and RECURRENCE-ID entries for moved meetings; import folds them back.
+  Additive fields, so `schemaVersion` stays 1 (as with `timing` and `hidden`).
 - ICS import: `parse_ics`/`parseIcs` return raw `startAt`/`endAt`/`tz`; `event_times`/`icsLocalTimes`
   convert to the wheel zone. Zones that cannot be resolved (Outlook's Windows names, floating times)
   are taken as written. Python 3.8 has no zoneinfo, so the CLI converts UTC to the computer's zone.

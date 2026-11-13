@@ -151,6 +151,39 @@
       "notes": "Lunch to lunch, off site."
     },
     {
+      "id": "group-meeting",
+      "ringId": "research",
+      "title": "Research group meeting",
+      "kind": "milestone",
+      "start": "2026-09-08",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "status": "planned",
+      "recurrence": "monthly",
+      "monthlyBy": "weekday",
+      "until": "2027-06-30",
+      "exceptions": [
+        {
+          "date": "2026-09-08",
+          "status": "done"
+        },
+        {
+          "date": "2026-10-13",
+          "status": "done"
+        },
+        {
+          "date": "2026-12-08",
+          "status": "cancelled"
+        },
+        {
+          "date": "2027-03-09",
+          "status": "moved",
+          "start": "2027-03-16"
+        }
+      ],
+      "owner": "Research group"
+    },
+    {
       "id": "conference",
       "ringId": "research",
       "title": "International conference",
@@ -314,6 +347,25 @@
       "recurrence": "none"
     },
     {
+      "id": "staff-meeting",
+      "ringId": "admin",
+      "title": "Staff meeting",
+      "kind": "milestone",
+      "start": "2026-09-30",
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "status": "planned",
+      "recurrence": "monthly",
+      "interval": 2,
+      "exceptions": [
+        {
+          "date": "2026-09-30",
+          "status": "done"
+        }
+      ],
+      "owner": "Head of department"
+    },
+    {
       "id": "annual-report",
       "ringId": "admin",
       "title": "Annual report due",
@@ -473,6 +525,22 @@
       "reason": "The funder extended the call deadline by one week."
     },
     {
+      "timestamp": "2026-10-13T11:05:00Z",
+      "eventId": "group-meeting",
+      "title": "Research group meeting",
+      "action": "edited",
+      "before": {
+        "start": "2026-10-13",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      },
+      "after": {
+        "start": "2026-10-13",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      }
+    },
+    {
       "timestamp": "2026-10-20T10:05:00Z",
       "eventId": "board-dec",
       "title": "Department board meeting",
@@ -488,6 +556,40 @@
         "endTime": "15:00"
       },
       "reason": "Morning clashes with the exam period; moved to the afternoon slot."
+    },
+    {
+      "timestamp": "2026-10-21T09:40:00Z",
+      "eventId": "group-meeting",
+      "title": "Research group meeting",
+      "action": "cancelled",
+      "before": {
+        "start": "2026-12-08",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      },
+      "after": {
+        "start": "2026-12-08",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      },
+      "reason": "Most of the group is at the project meeting that week."
+    },
+    {
+      "timestamp": "2026-10-21T09:45:00Z",
+      "eventId": "group-meeting",
+      "title": "Research group meeting",
+      "action": "moved",
+      "before": {
+        "start": "2027-03-09",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      },
+      "after": {
+        "start": "2027-03-16",
+        "startTime": "10:00",
+        "endTime": "11:00"
+      },
+      "reason": "Clashes with the exam week; one week later."
     },
     {
       "timestamp": "2026-10-28T14:00:00Z",
