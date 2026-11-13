@@ -294,8 +294,31 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
   .file #fileName { max-width: 140px; }
 }
 </style>
+
+<style>
+.sitebar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: none;
+  padding: 4px 16px; background: #102a43; color: #fff; font-size: 13.5px; }
+.sitebar .sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; font-weight: 700; }
+.sitebar nav { margin-left: auto; display: flex; gap: 2px; flex-wrap: wrap; }
+.sitebar nav a { color: #d6e4f2; text-decoration: none; padding: 3px 9px; border-radius: 6px; }
+.sitebar nav a:hover, .sitebar nav a[aria-current] { background: rgba(255,255,255,.12); color: #fff; }
+.sitebar a:focus-visible { outline: 2px solid #8ab4f8; outline-offset: 1px; }
+#wheel { max-height: calc(100vh - 104px); }
+@media print { .sitebar { display: none !important; } }
+</style>
 </head>
 <body>
+<div class="sitebar"><a class="sb-brand" href="../"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#56B4E9" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#E69F00" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="#fff" stroke-width="2"/></svg>Year Wheel</a>
+  <nav aria-label="Site">
+    <a href="../">Home</a>
+    <a href="../guide.html">Guide</a>
+    <a href="yearwheel.html">App</a>
+    <a href="demo.html" aria-current="page">Demo</a>
+    <a href="https://github.com/rtomkowski/yearwheel/releases/latest">Download</a>
+    <a href="https://github.com/rtomkowski/yearwheel">GitHub</a>
+  </nav>
+</div>
+
 <!-- ============================================================ MARKUP -->
 <header class="bar">
   <div class="brand">

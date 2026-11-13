@@ -8,7 +8,7 @@ Usage: python tools/build_site.py      (run tools/build_release.py first for fre
 Needs pandoc for the online guide. Output:
   website/index.html          landing page (from docs/site/index.html)
   website/guide.html          the user guide as a web page (from docs/user-guide.md)
-  website/app/yearwheel.html  the app, unchanged
+  website/app/yearwheel.html  the app with the site menu added at the top
   website/app/demo.html       the app with the fictional demo wheel loaded on start
   website/images/             screenshots
   website/downloads/          demo wheel and CSV import template
@@ -42,6 +42,43 @@ DEMO_SCRIPT = """
 </script>
 """
 
+# Added to the website copies of the app (not the download): the site menu above the app's own
+# toolbar, so Home, Guide and Download stay one click away. Hidden when printing.
+SITE_BAR_STYLE = """
+<style>
+.sitebar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: none;
+  padding: 4px 16px; background: #102a43; color: #fff; font-size: 13.5px; }
+.sitebar .sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; font-weight: 700; }
+.sitebar nav { margin-left: auto; display: flex; gap: 2px; flex-wrap: wrap; }
+.sitebar nav a { color: #d6e4f2; text-decoration: none; padding: 3px 9px; border-radius: 6px; }
+.sitebar nav a:hover, .sitebar nav a[aria-current] { background: rgba(255,255,255,.12); color: #fff; }
+.sitebar a:focus-visible { outline: 2px solid #8ab4f8; outline-offset: 1px; }
+#wheel { max-height: calc(100vh - 104px); }
+@media print { .sitebar { display: none !important; } }
+</style>
+"""
+
+SITE_BAR = """
+<div class="sitebar"><a class="sb-brand" href="../"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#56B4E9" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#E69F00" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="#fff" stroke-width="2"/></svg>Year Wheel</a>
+  <nav aria-label="Site">
+    <a href="../">Home</a>
+    <a href="../guide.html">Guide</a>
+    <a href="yearwheel.html"%s>App</a>
+    <a href="demo.html"%s>Demo</a>
+    <a href="https://github.com/rtomkowski/yearwheel/releases/latest">Download</a>
+    <a href="https://github.com/rtomkowski/yearwheel">GitHub</a>
+  </nav>
+</div>
+"""
+
+
+def with_site_bar(app, page):
+    """The app with the site menu added at the top of the page; page is 'app' or 'demo'."""
+    cur = ' aria-current="page"'
+    bar = SITE_BAR % (cur if page == "app" else "", cur if page == "demo" else "")
+    app = app.replace("</head>", SITE_BAR_STYLE + "</head>", 1)
+    return app.replace("<body>", "<body>" + bar, 1)
+
 
 def main():
     if not shutil.which("pandoc"):
@@ -62,11 +99,11 @@ def main():
     with open(os.path.join(ROOT, "yearwheel.html"), encoding="utf-8") as f:
         app = f.read()
     with open(os.path.join(OUT, "app", "yearwheel.html"), "w", encoding="utf-8") as f:
-        f.write(app)
+        f.write(with_site_bar(app, "app"))
     with open(DEMO, encoding="utf-8") as f:
         demo = json.load(f)
     with open(os.path.join(OUT, "app", "demo.html"), "w", encoding="utf-8") as f:
-        f.write(app.replace("</body>", DEMO_SCRIPT % json.dumps(demo, ensure_ascii=False) + "</body>"))
+        f.write(with_site_bar(app, "demo").replace("</body>", DEMO_SCRIPT % json.dumps(demo, ensure_ascii=False) + "</body>"))
 
     shutil.copy(DEMO, os.path.join(OUT, "downloads"))
     shutil.copy(TEMPLATE_CSV, os.path.join(OUT, "downloads"))
