@@ -164,6 +164,8 @@ main { flex: 1; display: flex; min-height: 0; position: relative; }
 #tooltip .tt-title { font-weight: 650; margin-bottom: 2px; }
 #tooltip .tt-meta { color: var(--muted); }
 #tooltip .tt-notes { margin-top: 5px; white-space: pre-wrap; }
+#tooltip .tt-hint { margin-top: 5px; color: var(--muted); font-size: 11.5px; }
+@media (hover: none) { #tooltip .tt-hint { display: none; } }
 
 /* Dialogs */
 dialog {
@@ -191,7 +193,10 @@ dialog ul { margin: 0; padding-left: 18px; max-height: 240px; overflow: auto; fo
 .period.alt { fill: var(--band); }
 .period-lbl { fill: var(--fg); font-size: calc(9.5px * var(--ts, 1)); font-weight: 600; }
 .ringbg { cursor: copy; }
-.ev { cursor: pointer; outline: none; }
+.ev { cursor: pointer; outline: none; touch-action: none; }
+.ev.dragging { opacity: .35; }
+#wheel.is-dragging, #wheel.is-dragging .ev { cursor: grabbing !important; }
+.drag-preview { fill: var(--focus); fill-opacity: .18; stroke: var(--focus); stroke-width: 2; stroke-dasharray: 5 3; pointer-events: none; }
 .ev .shape { stroke-width: 1.2; }
 .ev:hover .shape, .ev.hl .shape { stroke-width: 2.4; }
 .ev:focus-visible .shape { stroke: var(--focus) !important; stroke-width: 3; }
@@ -653,6 +658,8 @@ const STR = {
     reason: 'Reason', reasonRequired: 'Please give a reason.',
     reasonMoveTitle: 'Why is "{title}" moving?', reasonCancelTitle: 'Why is "{title}" cancelled?',
     reasonMoveDetail: 'Before: {from}. After: {to}.',
+    dragHint: 'Drag to move it on the wheel.', dragHintSpan: 'Drag to move it, or drag an end to change its length.',
+    dragHintSeries: 'Shift+drag moves the whole series.', dragTo: 'New dates: {r}',
     ringDelTitle: 'Delete ring "{name}"', ringDelWhat: 'What should happen to its events?',
     ringDelMove: 'Move them to "{name}"', ringDelEvents: 'Delete its {n} events', deleteRing: 'Delete ring',
     errTitle: 'Please enter a title.', errStart: 'Please enter a start date.', errEnd: 'End must be on or after start.',
@@ -758,6 +765,8 @@ const STR = {
     reason: 'Anledning', reasonRequired: 'Ange en anledning.',
     reasonMoveTitle: 'Varför flyttas "{title}"?', reasonCancelTitle: 'Varför ställs "{title}" in?',
     reasonMoveDetail: 'Före: {from}. Efter: {to}.',
+    dragHint: 'Dra för att flytta den på hjulet.', dragHintSpan: 'Dra för att flytta den, eller dra i en ände för att ändra längden.',
+    dragHintSeries: 'Skift+dra flyttar hela serien.', dragTo: 'Nya datum: {r}',
     ringDelTitle: 'Ta bort ringen "{name}"', ringDelWhat: 'Vad ska hända med ringens händelser?',
     ringDelMove: 'Flytta dem till "{name}"', ringDelEvents: 'Ta bort ringens {n} händelser', deleteRing: 'Ta bort ring',
     errTitle: 'Ange en titel.', errStart: 'Ange ett startdatum.', errEnd: 'Slutdatum får inte vara före startdatum.',
@@ -1901,7 +1910,7 @@ function renderWheel() {
       const st = o.st || ev.status;
       const style = st === 'cancelled' ? 'fill:none;stroke:' + edge
         : 'fill:' + col + ';fill-opacity:' + (st === 'done' ? alpha(0.42, 0.5) : alpha(1, 1)) + ';stroke:' + edge;
-      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '">' +
+      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" data-s="' + o.s + '" data-e="' + o.e + '" data-r0="' + f1(lr0) + '" data-r1="' + f1(lr1) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '">' +
         '<path class="shape" pointer-events="all" d="' + sector(lr0, lr1, a0, a1) + '" style="' + style + '"/></g>');
       if (o.prev !== undefined) {
         const g0 = o.prev, g1 = o.prev + (o.e - o.s);
@@ -1934,7 +1943,7 @@ function renderWheel() {
         : st === 'done' ? 'fill:' + col + ';fill-opacity:' + alpha(1.2, 0.9) + ';stroke:' + edge
           : 'fill:' + col + ';stroke:var(--panel)';
       const d = 'M' + f1(p[0]) + ' ' + f1(p[1] - sz) + ' L' + f1(p[0] + sz) + ' ' + f1(p[1]) + ' L' + f1(p[0]) + ' ' + f1(p[1] + sz) + ' L' + f1(p[0] - sz) + ' ' + f1(p[1]) + ' Z';
-      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '"><path class="shape" pointer-events="all" d="' + d + '" style="' + style + '"/></g>');
+      evs.push('<g class="ev ' + st + '" data-id="' + esc(ev.id) + occAttr(o) + '" data-s="' + o.s + '" data-e="' + o.e + '" data-r0="' + f1(rm) + '" data-sz="' + f1(sz) + '" tabindex="0" role="button" aria-label="' + esc(ariaFor(ev, ring, o)) + '"><path class="shape" pointer-events="all" d="' + d + '" style="' + style + '"/></g>');
       if (o.prev !== undefined && o.prev >= ys && o.prev < ye) {
         const q = pol(rm, A(o.prev + 0.5));
         ghosts.push('<g class="ghost"><path class="shape" style="stroke:' + edge + '" d="M' + f1(q[0]) + ' ' + f1(q[1] - sz) + ' L' + f1(q[0] + sz) + ' ' + f1(q[1]) + ' L' + f1(q[0]) + ' ' + f1(q[1] + sz) + ' L' + f1(q[0] - sz) + ' ' + f1(q[1]) + ' Z"/></g>');
@@ -2077,14 +2086,9 @@ function showTip(id, clientX, clientY, occ) {
   if (ev.owner) html += '<div class="tt-meta">' + esc(t('owner', { o: ev.owner })) + '</div>';
   if (!o && ev.status === 'moved' && ev.prevStart) html += '<div class="tt-meta">' + esc(t('previously', { dates: fmtRange(ev.prevStart, ev.kind === 'span' ? ev.prevEnd : null) })) + '</div>';
   if (ev.notes) html += '<div class="tt-notes">' + esc(ev.notes) + '</div>';
+  html += '<div class="tt-hint">' + esc(t(ev.kind === 'span' ? 'dragHintSpan' : 'dragHint') + (o ? ' ' + t('dragHintSeries') : '')) + '</div>';
   tip.innerHTML = html;
-  tip.hidden = false;
-  const r = tip.getBoundingClientRect();
-  let x = clientX + 14, y = clientY + 14;
-  if (x + r.width > innerWidth - 8) x = clientX - r.width - 14;
-  if (y + r.height > innerHeight - 8) y = clientY - r.height - 14;
-  tip.style.left = Math.max(8, x) + 'px';
-  tip.style.top = Math.max(8, y) + 'px';
+  placeTip(clientX, clientY);
 }
 function hideTip() { tip.hidden = true; }
 function highlight(id) { $$('#wheel [data-id]').forEach(el => el.classList.toggle('hl', !!id && el.dataset.id === id)); }
@@ -2543,7 +2547,7 @@ function createFromTemplate(tid, title, yearStart) {
    Every move and cancel goes through commit() with a changelog entry and a reason. */
 function moveEvent(id, start, end, reason) {
   const old = state.wheel.events.find(e => e.id === id);
-  const after = range(Object.assign({}, old, { start, end }));
+  const after = range(Object.assign({}, old, { start, end })), snap = Object.assign({}, old);
   commit(w => {
     const ev = w.events.find(e => e.id === id);
     ev.prevStart = old.start;
@@ -2552,7 +2556,8 @@ function moveEvent(id, start, end, reason) {
     if (ev.kind === 'span') ev.end = end;
     if (ev.status === 'planned') ev.status = 'moved';
     delete ev.placeholder;
-  }, { log: logEntry(old, 'moved', { before: range(old), after, reason }) });
+    keepExceptions(ev, snap); // single meetings of a moved series follow along
+  }, { log: logEntry(snap, 'moved', { before: range(snap), after, reason }) });
 }
 function cancelEvent(id, reason) {
   const old = state.wheel.events.find(e => e.id === id);
@@ -2583,6 +2588,159 @@ function markDone(id) {
   const old = state.wheel.events.find(e => e.id === id);
   commit(w => { const ev = w.events.find(e => e.id === id); ev.status = 'done'; delete ev.placeholder; },
     { log: logEntry(old, 'edited') });
+}
+
+/* ============================================================ DRAG ON THE WHEEL
+   Drag an event round the wheel to move it, or an end of a span to change its length. Whole days
+   only: times stay as they are. A drop that changes the dates asks for a reason (askReason) and is
+   saved through moveEvent, or setOccurrence for one meeting of a weekly or monthly event
+   (Shift+drag moves the whole series). Nothing is saved while dragging. */
+const EDGE = 8; // arc length (viewBox units) at each end of a span that resizes instead of moving
+let drag = null, dragEnded = 0;
+function wheelPoint(evt) {
+  const svg = $('#wheel'), p = svg.createSVGPoint();
+  p.x = evt.clientX; p.y = evt.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+// Angle of the pointer on the wheel, with the wheel's rotation taken off (0 = start of the year).
+function wheelAngle(evt) {
+  const q = wheelPoint(evt);
+  return normA(Math.atan2(q.x - CX, -(q.y - CY)) - (state.wheelRot || 0));
+}
+// 'move', 'resize-start' or 'resize-end' for a pointer on an event shape.
+function dragMode(g, evt) {
+  if (g.dataset.sz !== undefined) return 'move'; // milestone
+  const { ys, ye } = yearRange(state.yearIdx), s = +g.dataset.s, e = +g.dataset.e, per = TAU / (ye - ys);
+  const q = wheelPoint(evt), r = Math.hypot(q.x - CX, q.y - CY), a = wheelAngle(evt);
+  const zone = Math.min(EDGE, (Math.min(e, ye) - Math.max(s, ys)) * per * r / 3);
+  const dist = n => Math.abs(normA(a - (n - ys) * per + Math.PI) - Math.PI) * r;
+  const ds = s >= ys ? dist(s) : Infinity, de = e <= ye ? dist(e) : Infinity;
+  if (Math.min(ds, de) > zone) return 'move';
+  return ds <= de ? 'resize-start' : 'resize-end';
+}
+// What is being changed: one meeting of a series, or the event itself (all repeats follow).
+function dragTarget(d) {
+  const ev = state.wheel.events.find(e => e.id === d.id);
+  if (!ev) return null;
+  const o = d.occ && !d.series ? occOf(ev, d.occ) : null;
+  const s0 = o ? o.s : d2n(ev.start), e0 = o ? o.e - 1 : ev.kind === 'span' && isDate(ev.end) ? d2n(ev.end) : s0;
+  return { ev, o, s0, e0 };
+}
+// New first and last day (day numbers) after dragging by `delta` days, kept inside the wheel's years.
+function dragDates(tg, mode, delta) {
+  const lo = yearRange(0).ys, hi = yearRange((state.wheel.years || 1) - 1).ye - 1;
+  let { s0: s, e0: e } = tg;
+  if (mode === 'move') {
+    const d = Math.min(Math.max(delta, Math.min(0, lo - s)), Math.max(0, hi - e));
+    s += d; e += d;
+  } else if (mode === 'resize-start') s = Math.min(Math.max(s + delta, Math.min(tg.s0, lo)), e);
+  else e = Math.max(Math.min(e + delta, Math.max(tg.e0, hi)), s);
+  return { s, e };
+}
+function dragRange(tg, nd) {
+  const ev = tg.ev, span = ev.kind === 'span';
+  return tg.o ? occRange(ev, { s: nd.s, e: nd.e + 1 }) : range(Object.assign({}, ev, { start: n2d(nd.s), end: span ? n2d(nd.e) : undefined }));
+}
+function placeTip(clientX, clientY) {
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = clientX + 14, y = clientY + 14;
+  if (x + r.width > innerWidth - 8) x = clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = clientY - r.height - 14;
+  tip.style.left = Math.max(8, x) + 'px';
+  tip.style.top = Math.max(8, y) + 'px';
+}
+function dragTip(evt, title, text) {
+  tip.innerHTML = '<div class="tt-title">' + esc(title) + '</div><div class="tt-meta">' + esc(text) + '</div>';
+  placeTip(evt.clientX, evt.clientY);
+}
+// The dashed outline at the new place, drawn over the wheel while dragging.
+function dragPreview(d, tg, nd) {
+  const svg = $('#wheel'), g = d.g;
+  let p = svg.querySelector('.drag-preview');
+  if (!p) { p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('class', 'drag-preview'); svg.appendChild(p); }
+  const { ys, ye } = yearRange(state.yearIdx), A = n => (n - ys) / (ye - ys) * TAU + (state.wheelRot || 0);
+  const s = +g.dataset.s + (nd.s - tg.s0), e = +g.dataset.e + (nd.e - tg.e0);
+  let path = '';
+  if (g.dataset.sz !== undefined) {
+    const sz = +g.dataset.sz, c = pol(+g.dataset.r0, A(s + 0.5));
+    if (s >= ys && s < ye) path = 'M' + f1(c[0]) + ' ' + f1(c[1] - sz) + ' L' + f1(c[0] + sz) + ' ' + f1(c[1]) + ' L' + f1(c[0]) + ' ' + f1(c[1] + sz) + ' L' + f1(c[0] - sz) + ' ' + f1(c[1]) + ' Z';
+  } else if (e > ys && s < ye) {
+    let a0 = A(Math.max(s, ys)), a1 = A(Math.min(e, ye));
+    if (a1 - a0 < 0.012) { const mid = (a0 + a1) / 2; a0 = mid - 0.006; a1 = mid + 0.006; }
+    path = sector(+g.dataset.r0, +g.dataset.r1, a0, a1);
+  }
+  p.setAttribute('d', path);
+}
+function dragStart(evt) {
+  const g = evt.target.closest('.ev');
+  if (!g || !evt.isPrimary || evt.button !== 0 || drag) return;
+  drag = { g, id: g.dataset.id, occ: g.dataset.occ || null, mode: dragMode(g, evt), pid: evt.pointerId,
+    x0: evt.clientX, y0: evt.clientY, a: wheelAngle(evt), total: 0, delta: 0, on: false, series: evt.shiftKey };
+}
+function dragMove(evt) {
+  const d = drag;
+  if (!d || evt.pointerId !== d.pid) return;
+  if (!d.on) {
+    if (Math.hypot(evt.clientX - d.x0, evt.clientY - d.y0) < 4) return; // still a click
+    d.on = true;
+    try { $('#wheel').setPointerCapture(d.pid); } catch (err) { /* pointer already gone */ }
+    d.g.classList.add('dragging');
+    $('#wheel').classList.add('is-dragging');
+    highlight(null);
+  }
+  const a = wheelAngle(evt);
+  d.total += normA(a - d.a + Math.PI) - Math.PI;
+  d.a = a;
+  d.series = d.series || evt.shiftKey;
+  const { ys, ye } = yearRange(state.yearIdx);
+  d.delta = Math.round(d.total / TAU * (ye - ys));
+  const tg = dragTarget(d);
+  if (!tg) return;
+  const nd = dragDates(tg, d.mode, d.delta);
+  dragPreview(d, tg, nd);
+  dragTip(evt, tg.ev.title, t('dragTo', { r: fmtR(dragRange(tg, nd)) }));
+}
+function dragClear() {
+  const p = $('#wheel .drag-preview');
+  if (p) p.remove();
+  $('#wheel').classList.remove('is-dragging');
+  hideTip();
+}
+async function dragEnd(evt, cancel) {
+  const d = drag;
+  if (!d || (evt && evt.pointerId !== d.pid)) return;
+  drag = null;
+  if (!d.on) return; // a plain click: the click handler opens the editor
+  dragEnded = performance.now();
+  const tg = dragTarget(d);
+  const nd = tg && dragDates(tg, d.mode, d.delta);
+  dragClear();
+  if (cancel || !tg || (nd.s === tg.s0 && nd.e === tg.e0)) { renderWheel(); return; }
+  const ev = tg.ev, span = ev.kind === 'span';
+  // A whole series keeps the rules of the editor: until after the start, a span shorter than the repeat.
+  if (!tg.o && pIsRepeat(ev)) {
+    const iv = pInterval(ev);
+    const err = isDate(ev.until) && n2d(nd.s) > ev.until ? t('errUntil')
+      : span && nd.e - nd.s >= (ev.recurrence === 'weekly' ? 7 * iv : 28 * iv) ? t('errRepeatLong') : '';
+    if (err) { renderWheel(); dragTip(evt, ev.title, err); return; }
+  }
+  const before = tg.o ? occRange(ev, tg.o) : range(ev), after = dragRange(tg, nd);
+  const reason = await askReason('moved', ev.title, [fmtR(before), fmtR(after)]);
+  if (reason === null) { renderWheel(); return; }
+  if (tg.o) {
+    // Dropped back on its own date with the series' length: the meeting is as in the series again.
+    const len = span && isDate(ev.end) ? d2n(ev.end) - d2n(ev.start) : 0;
+    const back = n2d(nd.s) === d.occ && nd.e - nd.s === len;
+    const change = back ? null : Object.assign({ status: 'moved', start: n2d(nd.s) }, span ? { end: n2d(nd.e) } : {});
+    setOccurrence(d.id, d.occ, change, reason);
+  } else moveEvent(d.id, n2d(nd.s), span ? n2d(nd.e) : undefined, reason);
+  if (state.editingId === d.id) openEditor(d.id, null, state.editingOcc);
+}
+// Cursor over an event: a grab hand, or a resize arrow near the ends of a span.
+function dragCursor(evt) {
+  const g = evt.target.closest('.ev');
+  if (g) g.style.cursor = dragMode(g, evt) === 'move' ? 'grab' : 'ew-resize';
 }
 
 /* ============================================================ QUARTERS
@@ -3054,13 +3212,8 @@ function cycleTheme() {
 
 /* ============================================================ INIT AND EVENTS */
 function svgDate(evt) {
-  const svg = $('#wheel'), p = svg.createSVGPoint();
-  p.x = evt.clientX; p.y = evt.clientY;
-  const q = p.matrixTransform(svg.getScreenCTM().inverse());
-  let a = Math.atan2(q.x - CX, -(q.y - CY));
-  if (a < 0) a += TAU;
   const { ys, ye } = yearRange(state.yearIdx);
-  return n2d(ys + Math.floor(normA(a - (state.wheelRot || 0)) / TAU * (ye - ys)));
+  return n2d(ys + Math.floor(wheelAngle(evt) / TAU * (ye - ys)));
 }
 function init() {
   applyI18n();
@@ -3069,16 +3222,23 @@ function init() {
   $('#selLang').onchange = e => setLang(e.target.value);
   const svg = $('#wheel');
   svg.addEventListener('click', e => {
+    if (performance.now() - dragEnded < 400) return; // the end of a drag, not a click
     const g = e.target.closest('[data-id]');
     if (g) { openEditor(g.dataset.id, null, g.dataset.occ || null); return; }
     const rb = e.target.closest('[data-ring]');
     if (rb) openEditor(null, { ringId: rb.dataset.ring, start: svgDate(e) });
   });
+  svg.addEventListener('pointerdown', dragStart);
+  svg.addEventListener('pointermove', dragMove);
+  svg.addEventListener('pointerup', e => dragEnd(e, false));
+  svg.addEventListener('pointercancel', e => dragEnd(e, true));
   svg.addEventListener('mousemove', e => {
+    if (drag && drag.on) return;
+    dragCursor(e);
     const g = e.target.closest('[data-id]');
     if (g) { showTip(g.dataset.id, e.clientX, e.clientY, g.dataset.occ); highlight(g.dataset.id); } else { hideTip(); highlight(null); }
   });
-  svg.addEventListener('mouseleave', () => { hideTip(); highlight(null); });
+  svg.addEventListener('mouseleave', () => { if (!(drag && drag.on)) { hideTip(); highlight(null); } });
   svg.addEventListener('focusin', e => {
     const g = e.target.closest('[data-id]');
     if (!g) return;
@@ -3244,14 +3404,15 @@ function init() {
     createFromTemplate($('#newTemplate').value, $('#newTitle').value.trim(), $('#newYearStart').value);
   });
 
-  // Escape closes the innermost thing that is open (dialog, menu, then editor) and is marked as
+  // Escape cancels a drag on the wheel, or closes the innermost thing that is open (dialog, menu, then editor) and is marked as
   // handled, so the surrounding window (an app's built-in browser, or full-screen mode) does not
   // also react to it, for example by changing size. With nothing open, Escape is left alone.
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || e.isComposing) return;
     const dialogs = $$('dialog[open]');
     const menu = $$('details.menu').find(m => m.open);
-    if (dialogs.length) settle(dialogs[dialogs.length - 1], false);
+    if (drag && drag.on) dragEnd(null, true);
+    else if (dialogs.length) settle(dialogs[dialogs.length - 1], false);
     else if (menu) { menu.open = false; menu.querySelector('summary').focus(); }
     else if (!$('#drawer').hidden) closeDrawer();
     else if (!tip.hidden) hideTip();

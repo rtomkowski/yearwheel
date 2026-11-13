@@ -112,6 +112,15 @@ or click **Cancel event**, you are asked why. The reason is kept in the change l
 see later what changed and why. **History** at the bottom of the editor shows the changes to that
 event. **Delete** removes an event completely (this is also logged).
 
+**Moving events on the wheel.** You can also drag an event round the wheel to new dates. Drag
+the middle of a span, or a milestone, to move it; drag either end of a span to make it longer or
+shorter. While you drag, a dashed outline shows the new place and the new dates are shown next to
+the pointer. When you let go you are asked for a reason, as in the editor; **Back** (or Escape
+while dragging) leaves the event where it was. Dragging moves whole days: times such as 09:00 to
+11:00 stay the same on the new day. For a weekly or monthly meeting, dragging moves only that one
+meeting; hold **Shift** while dragging to move the whole series. Dragging works with a mouse, a pen
+or a finger on a touch screen.
+
 **One meeting of a series.** Click a single meeting on the wheel: the editor shows **This
 occurrence** with its date and buttons that change only that meeting: **Move this one** (to the
 new date above the buttons), **Cancel this one**, **Mark done**, and **Restore** to put it back as

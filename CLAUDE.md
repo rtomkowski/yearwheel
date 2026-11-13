@@ -99,6 +99,13 @@ SVG export resolves computed styles inline with the light theme forced, so no CS
 
 Also IMPORT (ICS/CSV dialog with per-event ring choice).
 
+Also DRAG ON THE WHEEL: Pointer Events on `.ev` shapes (which carry `data-s`/`data-e` day numbers and
+`data-r0`/`data-r1` radii, milestones `data-sz`). Drag the body to move, a span's ends to resize;
+whole days only, times kept, clamped to the wheel's years. Nothing changes until the drop, which asks
+`askReason` and then calls `moveEvent` (keeps a series' exceptions via `keepExceptions`) or
+`setOccurrence` for one meeting (Shift+drag moves the series). Escape cancels a drag (global Escape
+handler); a click right after a drag is ignored (`dragEnded`).
+
 Saving: with the File System Access API the last file handle is kept in IndexedDB (`yearwheel` db,
 `handles` store, key `lastFile`, value `{h, id}`) and reconnected by `restoreHandle()` after
 Continue/Restore when name and wheel id match; Save checks permission with `canWrite()`. Without the
