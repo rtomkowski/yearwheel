@@ -391,6 +391,7 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
       <select id="lAction" aria-label="Filter by change" data-i18n-aria="allActions"></select>
       <span id="logCount" class="hint grow"></span>
     </div>
+    <p class="hint" id="logOff" hidden data-i18n="logOff">The change log is off: changes are not recorded. Turn on "Ask for a reason" in Settings to record them again.</p>
     <div class="table-wrap"><table id="logTable"><thead></thead><tbody></tbody></table></div>
     <h2 data-i18n="reviews">Quarterly reviews</h2>
     <div class="table-wrap"><table id="reviewTable"><thead></thead><tbody></tbody></table></div>
@@ -520,6 +521,8 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
       <label class="check"><input type="checkbox" data-set="showQuarters"> <span data-i18n="sShowQuarters">Show quarter boundaries</span></label>
       <label class="check"><input type="checkbox" data-set="weekTicks"> <span data-i18n="sWeekTicks">Show week numbers</span></label>
       <label class="check"><input type="checkbox" data-set="showPeriods"> <span data-i18n="sShowPeriods">Show study periods</span></label>
+      <label class="check"><input type="checkbox" data-set="askReasons"> <span data-i18n="sAskReasons">Ask for a reason when an event is moved or cancelled</span></label>
+      <p class="hint" data-i18n="sAskReasonsHint">Turn this off while you plan the wheel: moving and resizing then asks nothing, and no changes are kept in the change log. Turn it on again when the plan is set.</p>
       <label><span data-i18n="sTextSize">Text size</span> <output data-out="textScale" style="color:var(--fg);font-weight:600"></output>
         <input type="range" data-set="textScale" min="70" max="150" step="10" style="padding:0">
       </label>
@@ -585,6 +588,7 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
     <p class="hint" id="reasonDetail"></p>
     <label><span data-i18n="reason">Reason</span> <textarea id="reasonText" rows="3"></textarea></label>
     <p class="error" id="reasonError" role="alert"></p>
+    <p class="hint" data-i18n="reasonOffHint">Planning many changes? You can turn this question off in Settings. Changes are then not kept in the change log.</p>
     <div class="btns"><button type="button" data-close data-i18n="back">Back</button><button value="ok" class="primary" data-i18n="confirm">Confirm</button></div>
   </form>
 </dialog>
@@ -652,6 +656,10 @@ const STR = {
     sTitle: 'Wheel title', sOwner: 'Owner', sYearStart: 'Year starts on', sYears: 'Number of years',
     sQuarterStart: 'Q1 starts in', sWheelTop: 'Top of the wheel', topJanuary: 'January', topYearStart: 'First month of the year', sLanguage: 'Language', sShowQuarters: 'Show quarter boundaries',
     sWeekTicks: 'Show week numbers', sShowPeriods: 'Show study periods', periods: 'Study periods',
+    sAskReasons: 'Ask for a reason when an event is moved or cancelled',
+    sAskReasonsHint: 'Turn this off while you plan the wheel: moving and resizing then asks nothing, and no changes are kept in the change log. Turn it on again when the plan is set.',
+    reasonOffHint: 'Planning many changes? You can turn this question off in Settings. Changes are then not kept in the change log.',
+    logOff: 'The change log is off: changes are not recorded. Turn on "Ask for a reason" in Settings to record them again.',
     periodsHint: "Enter your own institution's dates. Template dates are placeholders.", addPeriod: 'Add period',
     newWheel: 'New wheel', template: 'Template', create: 'Create', cancel: 'Cancel', back: 'Back', confirm: 'Confirm',
     newHint: 'Template dates are placeholders marked "edit me". They are shifted to the year you choose.',
@@ -759,6 +767,10 @@ const STR = {
     sTitle: 'Årshjulets titel', sOwner: 'Ansvarig', sYearStart: 'Året börjar', sYears: 'Antal år',
     sQuarterStart: 'Q1 börjar i', sWheelTop: 'Överst i hjulet', topJanuary: 'Januari', topYearStart: 'Årets första månad', sLanguage: 'Språk', sShowQuarters: 'Visa kvartalsgränser',
     sWeekTicks: 'Visa veckonummer', sShowPeriods: 'Visa läsperioder', periods: 'Läsperioder',
+    sAskReasons: 'Fråga efter anledning när en händelse flyttas eller ställs in',
+    sAskReasonsHint: 'Stäng av medan du planerar årshjulet: flytt och ändrad längd frågar då ingenting, och inga ändringar sparas i ändringsloggen. Slå på igen när planen är klar.',
+    reasonOffHint: 'Planerar du många ändringar? Du kan stänga av den här frågan under Inställningar. Ändringarna sparas då inte i ändringsloggen.',
+    logOff: 'Ändringsloggen är avstängd: ändringar sparas inte. Slå på "Fråga efter anledning" under Inställningar för att spara dem igen.',
     periodsHint: 'Ange ditt lärosätes egna datum. Mallens datum är platshållare.', addPeriod: 'Lägg till period',
     newWheel: 'Nytt årshjul', template: 'Mall', create: 'Skapa', cancel: 'Avbryt', back: 'Tillbaka', confirm: 'Bekräfta',
     newHint: 'Mallens datum är platshållare märkta "ändra mig". De flyttas till det år du väljer.',
@@ -1425,7 +1437,7 @@ function migrate(w) {
 }
 const KEY_ORDER = {
   wheel: ['schemaVersion', 'id', 'title', 'owner', 'template', 'yearStart', 'years', 'settings', 'rings', 'events', 'reviews', 'changelog'],
-  settings: ['language', 'weekTicks', 'showPeriods', 'showQuarters', 'quarterStartMonth', 'wheelTop', 'timeZone', 'textScale', 'colorOpacity', 'ringOpacity', 'periods'],
+  settings: ['language', 'weekTicks', 'showPeriods', 'showQuarters', 'quarterStartMonth', 'wheelTop', 'timeZone', 'textScale', 'colorOpacity', 'ringOpacity', 'askReasons', 'periods'],
   period: ['id', 'label', 'start', 'end', 'placeholder'],
   ring: ['id', 'name', 'color', 'order', 'hidden'],
   event: ['id', 'ringId', 'title', 'kind', 'start', 'end', 'startTime', 'endTime', 'timing', 'status', 'recurrence', 'interval', 'monthlyBy', 'until', 'exceptions', 'owner', 'notes', 'placeholder', 'prevStart', 'prevEnd'],
@@ -1509,7 +1521,7 @@ function withDefaults(w) {
 // Same rule as quarter_start_month() in tools/build_templates.py.
 function quarterStartFor(yearStart) { const m = +yearStart.slice(5, 7), d = +yearStart.slice(8, 10); return d <= 15 ? m : m % 12 + 1; }
 const S = key => {
-  const s = state.wheel.settings, d = { language: 'en', weekTicks: false, showPeriods: false, showQuarters: true, periods: [] };
+  const s = state.wheel.settings, d = { language: 'en', weekTicks: false, showPeriods: false, showQuarters: true, askReasons: true, periods: [] };
   if (key === 'quarterStartMonth') return s.quarterStartMonth || quarterStartFor(state.wheel.yearStart);
   return s[key] !== undefined ? s[key] : d[key];
 };
@@ -1521,11 +1533,13 @@ const state = { wheel: null, fileName: null, handle: null, dirty: false, yearIdx
 function commit(fn, opts) {
   opts = opts || {};
   fn(state.wheel);
-  if (opts.log) state.wheel.changelog.push(opts.log);
+  if (opts.log && tracking()) state.wheel.changelog.push(opts.log);
   state.dirty = true;
   scheduleDraft();
   renderAll(opts.panels);
 }
+// settings.askReasons false (while planning): no reason is asked and nothing goes into the change log.
+function tracking() { return S('askReasons') !== false; }
 function logEntry(ev, action, extra) {
   return Object.assign({ timestamp: new Date().toISOString(), eventId: ev.id, title: ev.title, action }, extra || {});
 }
@@ -2280,14 +2294,14 @@ async function submitEvent(forceCancel) {
   } else if (datesChanged) {
     action = 'moved';
     reason = await askReason('moved', old.title, [fmtR(before), fmtR(after)]);
-    if (v.status === 'planned') v.status = 'moved';
+    if (v.status === 'planned' && tracking()) v.status = 'moved';
   }
   if (reason === null) return; // user backed out of the reason dialog
   commit(wh => {
     pinTz(wh);
     const ev = wh.events.find(e => e.id === id);
     // Old position for the faint outline on the wheel; a change of time only stays on the same day.
-    if (action === 'moved' && (before.start !== after.start || before.end !== after.end)) {
+    if (action === 'moved' && tracking() && (before.start !== after.start || before.end !== after.end)) {
       ev.prevStart = old.start;
       if (old.end) ev.prevEnd = old.end; else delete ev.prevEnd;
     }
@@ -2392,7 +2406,7 @@ function renderSettingsPanel() {
   yrs.value = String(w.years || 1);
   qsm.value = String(S('quarterStartMonth'));
   $('[data-set=wheelTop]', p).value = w.settings.wheelTop === 'yearStart' ? 'yearStart' : 'january';
-  ['showQuarters', 'weekTicks', 'showPeriods'].forEach(k => { $('[data-set=' + k + ']', p).checked = !!S(k); });
+  ['showQuarters', 'weekTicks', 'showPeriods', 'askReasons'].forEach(k => { $('[data-set=' + k + ']', p).checked = !!S(k); });
   $('[data-set=timeZone]', p).value = wheelTz();
   [['textScale', textScale()], ['colorOpacity', colourOpacity()], ['ringOpacity', ringOpacity()]].forEach(([k, v]) => {
     $('[data-set=' + k + ']', p).value = String(Math.round(v * 100));
@@ -2422,6 +2436,7 @@ function settingChange(el) {
     else if (k === 'owner') { if (v.trim()) wh.owner = v.trim(); else delete wh.owner; }
     else if (k === 'years') wh.years = +v;
     else if (k === 'quarterStartMonth') wh.settings.quarterStartMonth = +v;
+    else if (k === 'askReasons') { if (v) delete wh.settings.askReasons; else wh.settings.askReasons = false; }
     else if (k === 'wheelTop') { if (v === 'january') delete wh.settings.wheelTop; else wh.settings.wheelTop = v; }
     else if (k === 'colorOpacity' || k === 'ringOpacity' || k === 'textScale') {
       const def = k === 'colorOpacity' ? COLOUR_DEFAULT : k === 'ringOpacity' ? RING_DEFAULT : 1;
@@ -2471,6 +2486,7 @@ function settle(d, ok) {
   if (d.open) d.close();
 }
 function askReason(kind, title, fromTo) {
+  if (!tracking()) return Promise.resolve(''); // turned off in Settings: go ahead without asking
   const d = $('#dlgReason');
   $('#reasonTitle').textContent = t(kind === 'moved' ? 'reasonMoveTitle' : 'reasonCancelTitle', { title });
   $('#reasonDetail').textContent = fromTo ? t('reasonMoveDetail', { from: fromTo[0], to: fromTo[1] }) : '';
@@ -2550,11 +2566,13 @@ function moveEvent(id, start, end, reason) {
   const after = range(Object.assign({}, old, { start, end })), snap = Object.assign({}, old);
   commit(w => {
     const ev = w.events.find(e => e.id === id);
-    ev.prevStart = old.start;
-    if (old.end) ev.prevEnd = old.end; else delete ev.prevEnd;
+    if (tracking()) { // while planning, a move is not a change to follow up: no "moved" status or old outline
+      ev.prevStart = old.start;
+      if (old.end) ev.prevEnd = old.end; else delete ev.prevEnd;
+      if (ev.status === 'planned') ev.status = 'moved';
+    }
     ev.start = start;
     if (ev.kind === 'span') ev.end = end;
-    if (ev.status === 'planned') ev.status = 'moved';
     delete ev.placeholder;
     keepExceptions(ev, snap); // single meetings of a moved series follow along
   }, { log: logEntry(snap, 'moved', { before: range(snap), after, reason }) });
@@ -2824,10 +2842,10 @@ function renderReview() {
   if (rv.mode === 'move') {
     html += '<div class="row"><label>' + esc(t('fStart')) + ' <input type="date" id="rvStart" value="' + occStart + '"></label>' +
       (span ? '<label>' + esc(t('fEnd')) + ' <input type="date" id="rvEnd" value="' + occEnd + '"></label>' : '<span></span>') + '</div>' +
-      '<label>' + esc(t('reason')) + ' <textarea id="rvReason" rows="2"></textarea></label><p class="error" id="rvErr" role="alert"></p>' +
+      rvReasonField() +
       '<div class="btns"><button data-rv="mode-none">' + esc(t('back')) + '</button><button data-rv="do-move" class="primary">' + esc(t('rvApplyMove')) + '</button></div>';
   } else if (rv.mode === 'cancel') {
-    html += '<label>' + esc(t('reason')) + ' <textarea id="rvReason" rows="2"></textarea></label><p class="error" id="rvErr" role="alert"></p>' +
+    html += rvReasonField() +
       '<div class="btns"><button data-rv="mode-none">' + esc(t('back')) + '</button><button data-rv="do-cancel" class="primary danger">' + esc(t('rvApplyCancel')) + '</button></div>';
   } else {
     html += '<div class="btns"><button data-rv="confirm" class="primary">' + esc(t('rvConfirm')) + '</button>' +
@@ -2837,15 +2855,20 @@ function renderReview() {
   html += '<div class="btns rv-nav"><button data-rv="back"' + (rv.i === 0 ? ' disabled' : '') + '>' + esc(t('rvPrev')) + '</button>' +
     '<button data-rv="skip">' + esc(t(rv.i === n - 1 ? 'rvFinish' : 'rvSkip')) + '</button></div>';
   body.innerHTML = html;
-  const first = $(rv.mode ? (rv.mode === 'move' ? '#rvStart' : '#rvReason') : '[data-rv=confirm]', body);
+  const first = $(rv.mode ? (rv.mode === 'move' ? '#rvStart' : '#rvReason, [data-rv=do-cancel]') : '[data-rv=confirm]', body);
   if (first) first.focus();
+}
+// The reason box in review mode; left out when reasons are turned off in Settings.
+function rvReasonField() {
+  return (tracking() ? '<label>' + esc(t('reason')) + ' <textarea id="rvReason" rows="2"></textarea></label>' : '') + '<p class="error" id="rvErr" role="alert"></p>';
 }
 function reviewAction(act) {
   const it = rv.items[rv.i];
   const next = () => { rv.i++; rv.mode = null; renderReview(); };
   const reasonOk = () => {
+    if (!tracking()) return '';
     const r = $('#rvReason').value.trim();
-    if (!r) { $('#rvErr').textContent = t('reasonRequired'); $('#rvReason').focus(); }
+    if (!r) { $('#rvErr').textContent = t('reasonRequired'); $('#rvReason').focus(); return null; }
     return r;
   };
   if (act === 'confirm') { it.outcome = 'confirmed'; next(); }
@@ -2860,7 +2883,7 @@ function reviewAction(act) {
     const s = $('#rvStart').value, e = span ? $('#rvEnd').value : '';
     if (!isDate(s) || (span && (!isDate(e) || e < s))) { $('#rvErr').textContent = !isDate(s) ? t('errStart') : t('errEnd'); return; }
     const reason = reasonOk();
-    if (!reason) return;
+    if (reason === null) return;
     if (it.occ) {
       // A weekly or monthly meeting: move only this one.
       const change = s === it.occ && (!span || d2n(e) - d2n(s) === d2n(ev.end) - d2n(ev.start)) ? null : Object.assign({ status: 'moved', start: s }, span ? { end: e } : {});
@@ -2874,7 +2897,7 @@ function reviewAction(act) {
     it.outcome = 'moved'; next();
   } else if (act === 'do-cancel') {
     const reason = reasonOk();
-    if (!reason) return;
+    if (reason === null) return;
     if (it.occ) setOccurrence(it.id, it.occ, { status: 'cancelled' }, reason); else cancelEvent(it.id, reason);
     it.outcome = 'cancelled'; next();
   } else if (act === 'stamp') {
@@ -2959,6 +2982,7 @@ function renderLog() {
       '<td>' + esc(dates(c)) + '</td><td>' + esc(c.reason || '') + '</td></tr>';
   }).join('') : '<tr class="empty-row"><td colspan="5">' + esc(t('noChanges')) + '</td></tr>';
   $('#logCount').textContent = t('nEntries', { n: rows.length });
+  $('#logOff').hidden = tracking();
   $('#reviewTable thead').innerHTML = '<tr>' + ['colQuarter', 'colDate', 'colReviewer', 'colNote'].map(k => '<th scope="col">' + esc(t(k)) + '</th>').join('') + '</tr>';
   $('#reviewTable tbody').innerHTML = w.reviews.length ? w.reviews.slice().reverse().map(r =>
     '<tr><td class="nowrap">' + esc(r.quarter) + '</td><td class="nowrap">' + esc(fmtDate(r.date)) + '</td><td>' + esc(r.reviewer || '') + '</td><td>' + esc(r.note || '') + '</td></tr>').join('')

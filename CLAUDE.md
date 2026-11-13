@@ -12,7 +12,10 @@
 - Never hardcode institution calendar dates as facts. Study periods, quarter start and year start
   are user settings; template dates are placeholders (`placeholder: true`, titles end "(edit me)").
 - No em dashes in UI text or docs.
-- Moving or cancelling an event must always record a non-empty reason in the changelog.
+- Moving or cancelling an event must always record a non-empty reason in the changelog, unless the
+  wheel's `settings.askReasons` is `false` (planning mode, set in Settings): then `askReason()` resolves
+  `''` without asking, `commit()` logs nothing (`tracking()`), and moves set no `moved` status or
+  `prevStart`. Omitted means true; only `false` is stored.
 
 ## Data
 - Schema: `schema/wheel.schema.json` (draft 2020-12). Current `schemaVersion` is 1.

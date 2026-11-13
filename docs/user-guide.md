@@ -107,10 +107,17 @@ Click an existing event to edit it. The editor opens on the right.
 
 Click **Apply** to save the change to the wheel (remember to **Save** the file afterwards).
 
-**Moving and cancelling always ask for a reason.** When you change the date or time of an event,
+**Moving and cancelling ask for a reason.** When you change the date or time of an event,
 or click **Cancel event**, you are asked why. The reason is kept in the change log, so everyone can
 see later what changed and why. **History** at the bottom of the editor shows the changes to that
 event. **Delete** removes an event completely (this is also logged).
+
+**Planning without reasons.** While you are still setting up a wheel, the questions get in the way.
+In **Settings**, untick **Ask for a reason when an event is moved or cancelled**. Moving, resizing
+and cancelling then ask nothing, and no changes are kept in the change log (the change log view
+says that it is off). Moved events also keep the status they had, with no faint outline of the old
+place. Tick the box again when the plan is set, so later changes are followed up. The setting is
+saved in the wheel file, so it applies to everyone who opens it.
 
 **Moving events on the wheel.** You can also drag an event round the wheel to new dates. Drag
 the middle of a span, or a milestone, to move it; drag either end of a span to make it longer or
