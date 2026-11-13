@@ -37,6 +37,9 @@
 - CSV: `wheelToCsv()` and `csvTemplate()` (PARSERS block) write the same columns `csvToItems()` reads
   (`CSV_COLUMNS`), semicolon separated, UTF-8 BOM and an Excel `sep=;` line (skipped on import).
   Swedish headings and status words are aliases. `tests/test_js_parsers.py` round-trips the demo wheel.
+- `settings.milestoneLabels: false` hides the outside names of milestones and meetings (wheel, exports,
+  print); the diamonds, tooltips and span labels stay. Each meeting of a weekly or monthly series has
+  its own label, except a series with more than `SERIES_LABELS` (12) meetings in view, labelled once.
 - `ring.hidden: true` keeps a ring but leaves it out of the drawing, legend, print and image exports
   (renderWheel filters it). Its events stay in the list, change log, reviews and ICS export.
 - Colour tints go through `alpha(rel, cap)`: rel x `settings.colorOpacity` (0.1 to 1, omitted =

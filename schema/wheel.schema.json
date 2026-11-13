@@ -54,6 +54,7 @@
         "textScale": { "type": "number", "minimum": 0.7, "maximum": 1.5, "description": "Size of all text on the wheel; omitted means 1." },
         "ringOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "How solid the band behind each ring is: 1 is exactly the ring colour; omitted means 0.1." },
         "colorStrength": { "type": "number", "minimum": 0.5, "maximum": 1.75, "description": "Older setting, converted to colorOpacity when the app opens the file." },
+        "milestoneLabels": { "type": "boolean", "description": "false hides the outside names of milestones and meetings on the wheel (also in exports and print); omitted means true." },
         "askReasons": { "type": "boolean", "description": "false while planning: moves and cancels ask no reason and nothing is added to the change log; omitted means true." },
         "timeZone": { "type": "string", "minLength": 1, "description": "IANA zone for event times, e.g. Europe/Stockholm" },
         "periods": { "type": "array", "items": { "$ref": "#/$defs/period" } }

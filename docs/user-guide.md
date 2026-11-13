@@ -85,7 +85,7 @@ Click an existing event to edit it. The editor opens on the right.
 ![The editor, showing a span from lunch to lunch.](images/editor.png)
 
 - **Title**, **Ring**, **Owner** and **Notes** are free text.
-- **Kind:** a **milestone** is one day; a **span** has a start and an end date.
+- **Kind:** a **milestone/meeting** is one day; a **span** has a start and an end date.
 - **Time:**
   - a milestone is a **whole day** or has a time **from and to**, for example a team day from
     09:00 to 17:00;
@@ -103,7 +103,12 @@ Click an existing event to edit it. The editor opens on the right.
   - **Until** (optional): the last day the meeting can take place. Leave it empty to keep going.
 
   The line under the fields reads the rule back, for example "Every 2 months, until 30 Jun 2027".
-  Each meeting is drawn on the wheel; the label is shown once per series.
+  Each meeting is drawn on the wheel with its own label. A series with more than 12 meetings in
+  the year (for example every week) is labelled once, so the labels do not crowd the wheel.
+
+  For a repeating event, **Start** and **End** describe one meeting, not the whole series. A two-hour
+  meeting every second month is a **milestone/meeting** with a time from and to; put the last date
+  of the series in **Until**. Use a **span** only when one meeting lasts several days.
 
 Click **Apply** to save the change to the wheel (remember to **Save** the file afterwards).
 
@@ -111,6 +116,11 @@ Click **Apply** to save the change to the wheel (remember to **Save** the file a
 or click **Cancel event**, you are asked why. The reason is kept in the change log, so everyone can
 see later what changed and why. **History** at the bottom of the editor shows the changes to that
 event. **Delete** removes an event completely (this is also logged).
+
+**Hiding the names of milestones and meetings.** A wheel with many meetings can get busy. In
+**Settings**, untick **Show the names of milestones and meetings** to hide all their names round
+the wheel; the diamonds stay, and pointing at one still shows its name and date. Span names are
+not affected. The setting is saved in the wheel, so it also applies to exports and print.
 
 **Planning without reasons.** While you are still setting up a wheel, the questions get in the way.
 In **Settings**, untick **Ask for a reason when an event is moved or cancelled**. Moving, resizing

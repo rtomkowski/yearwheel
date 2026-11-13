@@ -435,7 +435,7 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
       <fieldset class="seg">
         <legend data-i18n="fKind">Kind</legend>
         <div class="seg-opts">
-          <label><input type="radio" name="kind" value="milestone"> <span data-i18n="milestone">Milestone</span></label>
+          <label><input type="radio" name="kind" value="milestone"> <span data-i18n="milestone">Milestone/Meeting</span></label>
           <label><input type="radio" name="kind" value="span"> <span data-i18n="span">Span</span></label>
         </div>
       </fieldset>
@@ -544,6 +544,7 @@ dialog.wide { width: min(600px, calc(100vw - 32px)); }
       <label class="check"><input type="checkbox" data-set="showQuarters"> <span data-i18n="sShowQuarters">Show quarter boundaries</span></label>
       <label class="check"><input type="checkbox" data-set="weekTicks"> <span data-i18n="sWeekTicks">Show week numbers</span></label>
       <label class="check"><input type="checkbox" data-set="showPeriods"> <span data-i18n="sShowPeriods">Show study periods</span></label>
+      <label class="check"><input type="checkbox" data-set="milestoneLabels"> <span data-i18n="sMilestoneLabels">Show the names of milestones and meetings</span></label>
       <label class="check"><input type="checkbox" data-set="askReasons"> <span data-i18n="sAskReasons">Ask for a reason when an event is moved or cancelled</span></label>
       <p class="hint" data-i18n="sAskReasonsHint">Turn this off while you plan the wheel: moving and resizing then asks nothing, and no changes are kept in the change log. Turn it on again when the plan is set.</p>
       <label><span data-i18n="sTextSize">Text size</span> <output data-out="textScale" style="color:var(--fg);font-weight:600"></output>
@@ -654,7 +655,7 @@ const STR = {
     welcomeTitle: 'Plan your year on one page',
     welcomeText: 'Start a new wheel from a template or open a wheel file. Your data stays in a JSON file on your computer. Nothing is sent anywhere.',
     newFromTemplate: 'New wheel from template', openFile: 'Open wheel file', continueWith: 'Continue with "{title}"',
-    fTitle: 'Title', fRing: 'Ring', fKind: 'Kind', milestone: 'Milestone', span: 'Span', fStart: 'Start', fEnd: 'End',
+    fTitle: 'Title', fRing: 'Ring', fKind: 'Kind', milestone: 'Milestone/Meeting', span: 'Span', fStart: 'Start', fEnd: 'End',
     fStatus: 'Status', fRepeats: 'Repeats', fOwner: 'Owner', fNotes: 'Notes',
     st_planned: 'Planned', st_moved: 'Moved', st_done: 'Done', st_cancelled: 'Cancelled',
     rec_none: 'Does not repeat', rec_yearly: 'Every year', rec_weekly: 'Weekly', rec_monthly: 'Monthly',
@@ -667,8 +668,9 @@ const STR = {
     occTitle: 'This occurrence: {d} ({s})', occNewDate: 'New date', occMove: 'Move this one', occCancel: 'Cancel this one',
     occRestore: 'Restore', occHint: 'These buttons change only this occurrence. The other fields change the whole series.',
     occChanged: 'Changed occurrences', occMovedTo: 'to {d}', rvOnlyThis: 'Repeats: changes here apply to this occurrence only.',
-    errInterval: 'Repeat every 1 to 52 weeks or months.', errUntil: 'The repeat end date must be on or after the start.',
-    errRepeatLong: 'A repeating span must be shorter than the time between repeats.',
+    errInterval: '"Every how many weeks / months" must be a whole number from 1 to 52.', errUntil: 'Until ({until}) is before the first meeting ({start}). Choose a date on or after the start, or leave Until empty to keep going.',
+    errUntilDrag: 'This series ends on {until}, so it cannot start after that. Change Until in the editor first.',
+    errRepeatLong: 'Start and End describe one meeting. This one lasts {n} days but repeats {every}, so each meeting would run into the next (at most {max} days fit). For short meetings choose Milestone/Meeting and put the last date of the series in Until. Use Span only when one meeting lasts several days.',
     warnRepeat: '{name} has an unknown repeat value.', csv_until: 'until is not a date on or after the start, ignored',
     apply: 'Apply', cancelEvent: 'Cancel event', delete: 'Delete', history: 'History',
     moveHint: 'Changing dates or cancelling asks for a reason, which is kept in the change log.',
@@ -680,21 +682,24 @@ const STR = {
     sQuarterStart: 'Q1 starts in', sWheelTop: 'Top of the wheel', topJanuary: 'January', topYearStart: 'First month of the year', sLanguage: 'Language', sShowQuarters: 'Show quarter boundaries',
     sWeekTicks: 'Show week numbers', sShowPeriods: 'Show study periods', periods: 'Study periods',
     sAskReasons: 'Ask for a reason when an event is moved or cancelled',
+    sMilestoneLabels: 'Show the names of milestones and meetings',
     sAskReasonsHint: 'Turn this off while you plan the wheel: moving and resizing then asks nothing, and no changes are kept in the change log. Turn it on again when the plan is set.',
     reasonOffHint: 'Planning many changes? You can turn this question off in Settings. Changes are then not kept in the change log.',
     logOff: 'The change log is off: changes are not recorded. Turn on "Ask for a reason" in Settings to record them again.',
     periodsHint: "Enter your own institution's dates. Template dates are placeholders.", addPeriod: 'Add period',
     newWheel: 'New wheel', template: 'Template', create: 'Create', cancel: 'Cancel', back: 'Back', confirm: 'Confirm',
     newHint: 'Template dates are placeholders marked "edit me". They are shifted to the year you choose.',
-    reason: 'Reason', reasonRequired: 'Please give a reason.',
+    reason: 'Reason', reasonRequired: 'Write a short reason, for example "Clashes with the exam period". It is kept in the change log.',
     reasonMoveTitle: 'Why is "{title}" moving?', reasonCancelTitle: 'Why is "{title}" cancelled?',
     reasonMoveDetail: 'Before: {from}. After: {to}.',
     dragHint: 'Drag to move it on the wheel.', dragHintSpan: 'Drag to move it, or drag an end to change its length.',
     dragHintSeries: 'Shift+drag moves the whole series.', dragTo: 'New dates: {r}',
     ringDelTitle: 'Delete ring "{name}"', ringDelWhat: 'What should happen to its events?',
     ringDelMove: 'Move them to "{name}"', ringDelEvents: 'Delete its {n} events', deleteRing: 'Delete ring',
-    errTitle: 'Please enter a title.', errStart: 'Please enter a start date.', errEnd: 'End must be on or after start.',
-    errRing: 'Add a ring first.', errTime: 'Enter a start and end time, with the end after the start.',
+    errTitle: 'Give the event a title, for example "Board meeting".', errStart: 'Choose a start date.', errEnd: 'Choose an end date for the span, or choose Milestone/Meeting for a single day.',
+    errEndBefore: 'The end ({end}) is before the start ({start}). Choose an end date on or after the start.',
+    errRing: 'There are no rings yet. Every event belongs to a ring: add one under Rings first.', errTime: 'Enter both a From and a To time, or choose Whole day.',
+    errTimeOrder: 'The To time ({end}) must be after the From time ({start}) on the same day.',
     fTime: 'Time', wholeDay: 'Whole day', setTime: 'From and to', fFrom: 'From', fTo: 'To',
     tzHint: 'Times are in {tz}. Change the time zone under Settings.',
     sTimeZone: 'Time zone for event times',
@@ -718,7 +723,7 @@ const STR = {
     exSvg: 'SVG image', exPng: 'PNG image (high resolution)', exA4: 'Print A4 landscape', exA3: 'Print A3 landscape',
     searchEvents: 'Search', allRings: 'All rings', allStatuses: 'All statuses', allQuarters: 'All quarters',
     allActions: 'All changes', nEvents: '{n} of {total} events', nEntries: '{n} entries',
-    kind_milestone: 'Milestone', kind_span: 'Span', colWhen: 'When', colEvent: 'Event', colChange: 'Change',
+    kind_milestone: 'Milestone/Meeting', kind_span: 'Span', colWhen: 'When', colEvent: 'Event', colChange: 'Change',
     colDates: 'Dates', colReason: 'Reason', reviews: 'Quarterly reviews', colQuarter: 'Quarter', colDate: 'Date',
     colReviewer: 'Reviewer', colNote: 'Note', noReviews: 'No quarter has been reviewed yet.',
     noChanges: 'No changes recorded yet.', noMatch: 'No events match the filters.', deletedEvent: 'deleted',
@@ -749,8 +754,8 @@ const STR = {
     warnTimes: '{name}: invalid times.', warnRings: 'More than 6 rings.', warnReason: 'Change log entry {n}: {action} without a reason.',
     warnDupId: '{name}: duplicate id.', warnRing: '{name}: unknown ring.', warnStart: '{name}: invalid start date.',
     warnEnd: '{name}: span without a valid end date.', warnKind: '{name}: unknown kind.', warnStatus: '{name}: unknown status.',
-    errNewer: 'This file was made by a newer version of the app (schemaVersion {v}).',
-    fileType: 'Year wheel (JSON)', errDraw: 'Could not draw the wheel image.', errPng: 'The browser could not create the PNG.',
+    errNewer: 'This file was made by a newer version of Year Wheel (schemaVersion {v}). Download the latest version to open it.',
+    fileType: 'Year wheel (JSON)', errDraw: 'Could not draw the wheel image. Try again, or choose Export, SVG image, or print instead.', errPng: 'The browser could not create the PNG. Try again, or choose Export, SVG image, or print instead.',
     theme: 'Theme', theme_auto: 'automatic', theme_light: 'light', theme_dark: 'dark', notSavedYet: 'not saved yet',
     ariaMain: 'Main', ariaView: 'View', ariaPrevYear: 'Previous year', ariaNextYear: 'Next year', ariaEditor: 'Editor',
     ariaClose: 'Close editor', ariaSelectAll: 'Select all', ariaImport: 'Import {name}', ariaRingFor: 'Ring for {name}',
@@ -765,7 +770,7 @@ const STR = {
     welcomeTitle: 'Planera ditt år på en sida',
     welcomeText: 'Skapa ett nytt årshjul från en mall eller öppna en årshjulsfil. Dina data finns i en JSON-fil på din dator. Inget skickas någonstans.',
     newFromTemplate: 'Nytt årshjul från mall', openFile: 'Öppna årshjulsfil', continueWith: 'Fortsätt med "{title}"',
-    fTitle: 'Titel', fRing: 'Ring', fKind: 'Typ', milestone: 'Milstolpe', span: 'Period', fStart: 'Start', fEnd: 'Slut',
+    fTitle: 'Titel', fRing: 'Ring', fKind: 'Typ', milestone: 'Milstolpe/möte', span: 'Period', fStart: 'Start', fEnd: 'Slut',
     fStatus: 'Status', fRepeats: 'Upprepas', fOwner: 'Ansvarig', fNotes: 'Anteckningar',
     st_planned: 'Planerad', st_moved: 'Flyttad', st_done: 'Klar', st_cancelled: 'Inställd',
     rec_none: 'Upprepas inte', rec_yearly: 'Varje år', rec_weekly: 'Varje vecka', rec_monthly: 'Varje månad',
@@ -778,8 +783,9 @@ const STR = {
     occTitle: 'Detta tillfälle: {d} ({s})', occNewDate: 'Nytt datum', occMove: 'Flytta detta tillfälle', occCancel: 'Ställ in detta tillfälle',
     occRestore: 'Återställ', occHint: 'Knapparna här ändrar bara detta tillfälle. Övriga fält ändrar hela serien.',
     occChanged: 'Ändrade tillfällen', occMovedTo: 'till {d}', rvOnlyThis: 'Återkommande: ändringar här gäller bara detta tillfälle.',
-    errInterval: 'Upprepa var 1 till 52 veckor eller månader.', errUntil: 'Slutdatum för upprepningen måste vara samma dag som start eller senare.',
-    errRepeatLong: 'En återkommande period måste vara kortare än tiden mellan gångerna.',
+    errInterval: '"Antal veckor / månader mellan gångerna" måste vara ett heltal från 1 till 52.', errUntil: 'Till och med ({until}) är före första mötet ({start}). Välj ett datum samma dag som starten eller senare, eller lämna fältet tomt för att fortsätta utan slut.',
+    errUntilDrag: 'Serien slutar {until}, så den kan inte börja efter det. Ändra Till och med i redigeraren först.',
+    errRepeatLong: 'Start och Slut gäller ett möte. Det här varar {n} dagar men upprepas {every}, så varje möte skulle gå in i nästa (högst {max} dagar får plats). För korta möten, välj Milstolpe/möte och ange seriens sista datum i Till och med. Använd Period bara när ett möte varar flera dagar.',
     warnRepeat: '{name} har ett okänt värde för upprepning.', csv_until: 'until är inte ett datum från startdatum och framåt, ignoreras',
     apply: 'Verkställ', cancelEvent: 'Ställ in händelse', delete: 'Ta bort', history: 'Historik',
     moveHint: 'Om du ändrar datum eller ställer in en händelse får du ange en anledning, som sparas i ändringsloggen.',
@@ -791,21 +797,24 @@ const STR = {
     sQuarterStart: 'Q1 börjar i', sWheelTop: 'Överst i hjulet', topJanuary: 'Januari', topYearStart: 'Årets första månad', sLanguage: 'Språk', sShowQuarters: 'Visa kvartalsgränser',
     sWeekTicks: 'Visa veckonummer', sShowPeriods: 'Visa läsperioder', periods: 'Läsperioder',
     sAskReasons: 'Fråga efter anledning när en händelse flyttas eller ställs in',
+    sMilestoneLabels: 'Visa namnen på milstolpar och möten',
     sAskReasonsHint: 'Stäng av medan du planerar årshjulet: flytt och ändrad längd frågar då ingenting, och inga ändringar sparas i ändringsloggen. Slå på igen när planen är klar.',
     reasonOffHint: 'Planerar du många ändringar? Du kan stänga av den här frågan under Inställningar. Ändringarna sparas då inte i ändringsloggen.',
     logOff: 'Ändringsloggen är avstängd: ändringar sparas inte. Slå på "Fråga efter anledning" under Inställningar för att spara dem igen.',
     periodsHint: 'Ange ditt lärosätes egna datum. Mallens datum är platshållare.', addPeriod: 'Lägg till period',
     newWheel: 'Nytt årshjul', template: 'Mall', create: 'Skapa', cancel: 'Avbryt', back: 'Tillbaka', confirm: 'Bekräfta',
     newHint: 'Mallens datum är platshållare märkta "ändra mig". De flyttas till det år du väljer.',
-    reason: 'Anledning', reasonRequired: 'Ange en anledning.',
+    reason: 'Anledning', reasonRequired: 'Skriv en kort anledning, till exempel "Krockar med tentaperioden". Den sparas i ändringsloggen.',
     reasonMoveTitle: 'Varför flyttas "{title}"?', reasonCancelTitle: 'Varför ställs "{title}" in?',
     reasonMoveDetail: 'Före: {from}. Efter: {to}.',
     dragHint: 'Dra för att flytta den på hjulet.', dragHintSpan: 'Dra för att flytta den, eller dra i en ände för att ändra längden.',
     dragHintSeries: 'Skift+dra flyttar hela serien.', dragTo: 'Nya datum: {r}',
     ringDelTitle: 'Ta bort ringen "{name}"', ringDelWhat: 'Vad ska hända med ringens händelser?',
     ringDelMove: 'Flytta dem till "{name}"', ringDelEvents: 'Ta bort ringens {n} händelser', deleteRing: 'Ta bort ring',
-    errTitle: 'Ange en titel.', errStart: 'Ange ett startdatum.', errEnd: 'Slutdatum får inte vara före startdatum.',
-    errRing: 'Lägg till en ring först.', errTime: 'Ange start- och sluttid, med sluttiden efter starttiden.',
+    errTitle: 'Ge händelsen en titel, till exempel "Styrelsemöte".', errStart: 'Välj ett startdatum.', errEnd: 'Välj ett slutdatum för perioden, eller välj Milstolpe/möte för en enda dag.',
+    errEndBefore: 'Slutet ({end}) är före starten ({start}). Välj ett slutdatum samma dag som starten eller senare.',
+    errRing: 'Det finns inga ringar än. Varje händelse hör till en ring: lägg till en under Ringar först.', errTime: 'Ange både en Från- och en Till-tid, eller välj Heldag.',
+    errTimeOrder: 'Till-tiden ({end}) måste vara efter Från-tiden ({start}) samma dag.',
     fTime: 'Tid', wholeDay: 'Heldag', setTime: 'Från och till', fFrom: 'Från', fTo: 'Till',
     tzHint: 'Tiderna gäller i {tz}. Ändra tidszon under Inställningar.',
     sTimeZone: 'Tidszon för tider',
@@ -829,7 +838,7 @@ const STR = {
     exSvg: 'SVG-bild', exPng: 'PNG-bild (hög upplösning)', exA4: 'Skriv ut A4 liggande', exA3: 'Skriv ut A3 liggande',
     searchEvents: 'Sök', allRings: 'Alla ringar', allStatuses: 'Alla statusar', allQuarters: 'Alla kvartal',
     allActions: 'Alla ändringar', nEvents: '{n} av {total} händelser', nEntries: '{n} poster',
-    kind_milestone: 'Milstolpe', kind_span: 'Period', colWhen: 'När', colEvent: 'Händelse', colChange: 'Ändring',
+    kind_milestone: 'Milstolpe/möte', kind_span: 'Period', colWhen: 'När', colEvent: 'Händelse', colChange: 'Ändring',
     colDates: 'Datum', colReason: 'Anledning', reviews: 'Kvartalsgenomgångar', colQuarter: 'Kvartal', colDate: 'Datum',
     colReviewer: 'Granskad av', colNote: 'Kommentar', noReviews: 'Inget kvartal har gåtts igenom ännu.',
     noChanges: 'Inga ändringar registrerade ännu.', noMatch: 'Inga händelser matchar filtren.', deletedEvent: 'borttagen',
@@ -860,8 +869,8 @@ const STR = {
     warnTimes: '{name}: ogiltiga tider.', warnRings: 'Fler än 6 ringar.', warnReason: 'Ändringslogg, post {n}: {action} utan anledning.',
     warnDupId: '{name}: dubblerat id.', warnRing: '{name}: okänd ring.', warnStart: '{name}: ogiltigt startdatum.',
     warnEnd: '{name}: period utan giltigt slutdatum.', warnKind: '{name}: okänd typ.', warnStatus: '{name}: okänd status.',
-    errNewer: 'Filen är skapad av en nyare version av appen (schemaVersion {v}).',
-    fileType: 'Årshjul (JSON)', errDraw: 'Kunde inte rita bilden av årshjulet.', errPng: 'Webbläsaren kunde inte skapa PNG-bilden.',
+    errNewer: 'Filen är skapad av en nyare version av Årshjulet (schemaVersion {v}). Hämta den senaste versionen för att öppna den.',
+    fileType: 'Årshjul (JSON)', errDraw: 'Kunde inte rita bilden av årshjulet. Försök igen, eller välj Exportera, SVG-bild, eller skriv ut i stället.', errPng: 'Webbläsaren kunde inte skapa PNG-bilden. Försök igen, eller välj Exportera, SVG-bild, eller skriv ut i stället.',
     theme: 'Tema', theme_auto: 'automatiskt', theme_light: 'ljust', theme_dark: 'mörkt', notSavedYet: 'inte sparat ännu',
     ariaMain: 'Huvudmeny', ariaView: 'Vy', ariaPrevYear: 'Föregående år', ariaNextYear: 'Nästa år', ariaEditor: 'Redigering',
     ariaClose: 'Stäng redigering', ariaSelectAll: 'Markera alla', ariaImport: 'Importera {name}', ariaRingFor: 'Ring för {name}',
@@ -1460,7 +1469,7 @@ function migrate(w) {
 }
 const KEY_ORDER = {
   wheel: ['schemaVersion', 'id', 'title', 'owner', 'template', 'yearStart', 'years', 'settings', 'rings', 'events', 'reviews', 'changelog'],
-  settings: ['language', 'weekTicks', 'showPeriods', 'showQuarters', 'quarterStartMonth', 'wheelTop', 'timeZone', 'textScale', 'colorOpacity', 'ringOpacity', 'askReasons', 'periods'],
+  settings: ['language', 'weekTicks', 'showPeriods', 'showQuarters', 'quarterStartMonth', 'wheelTop', 'timeZone', 'textScale', 'colorOpacity', 'ringOpacity', 'milestoneLabels', 'askReasons', 'periods'],
   period: ['id', 'label', 'start', 'end', 'placeholder'],
   ring: ['id', 'name', 'color', 'order', 'hidden'],
   event: ['id', 'ringId', 'title', 'kind', 'start', 'end', 'startTime', 'endTime', 'timing', 'status', 'recurrence', 'interval', 'monthlyBy', 'until', 'exceptions', 'owner', 'notes', 'placeholder', 'prevStart', 'prevEnd'],
@@ -1544,7 +1553,7 @@ function withDefaults(w) {
 // Same rule as quarter_start_month() in tools/build_templates.py.
 function quarterStartFor(yearStart) { const m = +yearStart.slice(5, 7), d = +yearStart.slice(8, 10); return d <= 15 ? m : m % 12 + 1; }
 const S = key => {
-  const s = state.wheel.settings, d = { language: 'en', weekTicks: false, showPeriods: false, showQuarters: true, askReasons: true, periods: [] };
+  const s = state.wheel.settings, d = { language: 'en', weekTicks: false, showPeriods: false, showQuarters: true, milestoneLabels: true, askReasons: true, periods: [] };
   if (key === 'quarterStartMonth') return s.quarterStartMonth || quarterStartFor(state.wheel.yearStart);
   return s[key] !== undefined ? s[key] : d[key];
 };
@@ -1937,8 +1946,11 @@ function renderWheel() {
       laneEnd[li] = o.e; o.lane = li;
     });
     const L = Math.max(1, laneEnd.length), lt = T / L;
-    // Weekly and monthly events get one outside label (on their first occurrence in view), not one per meeting.
-    const labelled = new Set();
+    // Each meeting of a weekly or monthly event gets its own outside label, unless the series has more
+    // than SERIES_LABELS meetings in view (say every week): then only the first one is labelled.
+    const labelled = new Set(), many = new Set();
+    list.forEach(ev => { if (pIsRepeat(ev) && occurrences(ev, ys, ye).length > SERIES_LABELS) many.add(ev.id); });
+    const oneLabel = (ev, o) => o.occ && many.has(ev.id) && labelled.has(ev.id);
     const occAttr = o => (o.occ ? '" data-occ="' + o.occ : '');
     spans.forEach(o => {
       const ev = o.ev, lr1 = r1 - o.lane * lt - 0.8, lr0 = r1 - (o.lane + 1) * lt + 0.8;
@@ -1964,9 +1976,9 @@ function renderWheel() {
       if (lt >= 11 && fs >= 6 && (a1 - a0) * rm > textW(label, fs) + 10) {
         const ink = labelInk(col, st === 'cancelled' ? 0 : +(st === 'done' ? alpha(0.42, 0.5) : alpha(1, 1)), bandA);
         top.push(textPath(rm, a0, a1, 'arc-lbl' + (st === 'cancelled' ? ' cancelled' : ''), label, fs, ink));
-      } else if (!o.occ || !labelled.has(ev.id)) {
+      } else if (!oneLabel(ev, o)) {
         labelled.add(ev.id);
-        ext.push({ id: ev.id, a: (a0 + a1) / 2, r: rm, text: o.occ ? labelText(ev, ev.status) : label, st: o.occ ? ev.status : st });
+        ext.push({ id: ev.id, occ: o.occ, a: (a0 + a1) / 2, r: rm, text: label, st });
       }
     });
     // Milestones: diamonds on the ring centre line. Same-day milestones are nudged apart.
@@ -1991,9 +2003,9 @@ function renderWheel() {
           ghosts.push('<g class="ghost"><path class="shape" style="stroke:' + edge + '" d="M' + f1(q[0]) + ' ' + f1(q[1] - sz) + ' L' + f1(q[0] + sz) + ' ' + f1(q[1]) + ' L' + f1(q[0]) + ' ' + f1(q[1] + sz) + ' L' + f1(q[0] - sz) + ' ' + f1(q[1]) + ' Z"/></g>');
         });
       }
-      if (o.occ && labelled.has(ev.id)) return;
+      if (!S('milestoneLabels') || oneLabel(ev, o)) return; // names can be hidden in Settings
       labelled.add(ev.id);
-      ext.push({ id: ev.id, a, r: rm + sz, text: labelText(ev, o.occ ? ev.status : st), st: o.occ ? ev.status : st });
+      ext.push({ id: ev.id, occ: o.occ, a, r: rm + sz, text: labelText(ev, st), st });
     }));
   });
 
@@ -2022,6 +2034,7 @@ function renderWheel() {
   svg.setAttribute('aria-label', (w.title || t('untitled')) + ', ' + yearLabel(state.yearIdx));
 }
 
+const SERIES_LABELS = 12; // a series with more meetings than this in a year is labelled once
 function labelText(ev, st) {
   st = st || ev.status;
   const pre = st === 'done' ? '✓ ' : st === 'cancelled' ? '✕ ' : '';
@@ -2033,6 +2046,14 @@ function ariaFor(ev, ring, o) {
 }
 // Dates (and times) of one occurrence { s, e } as a changelog range.
 function occRange(ev, o) { return range(Object.assign({}, ev, { start: n2d(o.s), end: ev.kind === 'span' ? n2d(o.e - 1) : undefined })); }
+// A weekly or monthly span must be shorter than the time between meetings (a month counts as 28 days).
+// Returns the error text, or '' when a meeting of `days` days fits.
+function repeatLongErr(rec, iv, days) {
+  const gap = rec === 'weekly' ? 7 * iv : 28 * iv;
+  if (days <= gap) return '';
+  const every = t((rec === 'weekly' ? 'repWeek' : 'repMonth') + (iv === 1 ? '1' : iv === 2 ? '2' : 'N'), { n: iv });
+  return t('errRepeatLong', { n: days, every: every.charAt(0).toLowerCase() + every.slice(1), max: gap });
+}
 // "Every 2 months, the second Tuesday, until 30 Jun 2027"; '' when the event does not repeat.
 function repeatText(ev) {
   if (ev.recurrence === 'yearly') return t('repeatsYearly');
@@ -2083,7 +2104,7 @@ function layoutLabels(items) {
       const x = side === 0 ? CX + dx : CX - dx;
       const p0 = pol(it.r, it.a), p1 = pol(R.elbow, it.a);
       const tx = side === 0 ? x + 3 : x - 3;
-      out.push('<g class="lbl-g" data-id="' + esc(it.id) + '"><polyline class="leader" points="' + pt(p0) + ' ' + pt(p1) + ' ' + f1(x) + ' ' + f1(it.y) + '"/>' +
+      out.push('<g class="lbl-g" data-id="' + esc(it.id) + (it.occ ? '" data-occ="' + esc(it.occ) : '') + '"><polyline class="leader" points="' + pt(p0) + ' ' + pt(p1) + ' ' + f1(x) + ' ' + f1(it.y) + '"/>' +
         '<text class="ext-lbl ' + it.st + '" x="' + f1(tx) + '" y="' + f1(it.y) + '" dy="0.35em" font-size="' + f1(fs) + '" text-anchor="' + (side === 0 ? 'start' : 'end') + '">' + esc(trunc(it.text, Math.max(14, Math.round(LBL.maxChars * 11 / fs)))) + '</text></g>');
     });
   });
@@ -2289,11 +2310,13 @@ async function submitEvent(forceCancel) {
   // From-to on one day needs the end after the start; a continuous span over several days does not.
   const sameDay = !span || timing === 'daily' || v.end === v.start;
   const err = !w.rings.length ? t('errRing') : !v.title ? t('errTitle') : !isDate(v.start) ? t('errStart')
-    : span && (!isDate(v.end) || v.end < v.start) ? t('errEnd')
-      : timed && (!isTime(v.startTime) || !isTime(v.endTime) || (sameDay && v.endTime <= v.startTime)) ? t('errTime')
-        : rep && !(Number.isInteger(iv) && iv >= 1 && iv <= 52) ? t('errInterval')
-          : rep && v.until && (!isDate(v.until) || v.until < v.start) ? t('errUntil')
-            : rep && span && d2n(v.end) - d2n(v.start) >= (v.recurrence === 'weekly' ? 7 * iv : 28 * iv) ? t('errRepeatLong') : '';
+    : span && !isDate(v.end) ? t('errEnd')
+      : span && v.end < v.start ? t('errEndBefore', { start: fmtDate(v.start), end: fmtDate(v.end) })
+        : timed && (!isTime(v.startTime) || !isTime(v.endTime)) ? t('errTime')
+          : timed && sameDay && v.endTime <= v.startTime ? t('errTimeOrder', { start: v.startTime, end: v.endTime })
+            : rep && !(Number.isInteger(iv) && iv >= 1 && iv <= 52) ? t('errInterval')
+              : rep && v.until && (!isDate(v.until) || v.until < v.start) ? t('errUntil', { until: isDate(v.until) ? fmtDate(v.until) : v.until, start: fmtDate(v.start) })
+                : rep && span ? repeatLongErr(v.recurrence, iv, d2n(v.end) - d2n(v.start) + 1) : '';
   $('#evError').textContent = err;
   if (err) return;
   // The first time someone enters a time, fix the wheel's time zone so exports stay right for everyone.
@@ -2429,7 +2452,7 @@ function renderSettingsPanel() {
   yrs.value = String(w.years || 1);
   qsm.value = String(S('quarterStartMonth'));
   $('[data-set=wheelTop]', p).value = w.settings.wheelTop === 'yearStart' ? 'yearStart' : 'january';
-  ['showQuarters', 'weekTicks', 'showPeriods', 'askReasons'].forEach(k => { $('[data-set=' + k + ']', p).checked = !!S(k); });
+  ['showQuarters', 'weekTicks', 'showPeriods', 'milestoneLabels', 'askReasons'].forEach(k => { $('[data-set=' + k + ']', p).checked = !!S(k); });
   $('[data-set=timeZone]', p).value = wheelTz();
   [['textScale', textScale()], ['colorOpacity', colourOpacity()], ['ringOpacity', ringOpacity()]].forEach(([k, v]) => {
     $('[data-set=' + k + ']', p).value = String(Math.round(v * 100));
@@ -2459,7 +2482,7 @@ function settingChange(el) {
     else if (k === 'owner') { if (v.trim()) wh.owner = v.trim(); else delete wh.owner; }
     else if (k === 'years') wh.years = +v;
     else if (k === 'quarterStartMonth') wh.settings.quarterStartMonth = +v;
-    else if (k === 'askReasons') { if (v) delete wh.settings.askReasons; else wh.settings.askReasons = false; }
+    else if (k === 'askReasons' || k === 'milestoneLabels') { if (v) delete wh.settings[k]; else wh.settings[k] = false; } // default on: only false is stored
     else if (k === 'wheelTop') { if (v === 'january') delete wh.settings.wheelTop; else wh.settings.wheelTop = v; }
     else if (k === 'colorOpacity' || k === 'ringOpacity' || k === 'textScale') {
       const def = k === 'colorOpacity' ? COLOUR_DEFAULT : k === 'ringOpacity' ? RING_DEFAULT : 1;
@@ -2762,8 +2785,8 @@ async function dragEnd(evt, cancel) {
   // A whole series keeps the rules of the editor: until after the start, a span shorter than the repeat.
   if (!tg.o && pIsRepeat(ev)) {
     const iv = pInterval(ev);
-    const err = isDate(ev.until) && n2d(nd.s) > ev.until ? t('errUntil')
-      : span && nd.e - nd.s >= (ev.recurrence === 'weekly' ? 7 * iv : 28 * iv) ? t('errRepeatLong') : '';
+    const err = isDate(ev.until) && n2d(nd.s) > ev.until ? t('errUntilDrag', { until: fmtDate(ev.until) })
+      : span ? repeatLongErr(ev.recurrence, iv, nd.e - nd.s + 1) : '';
     if (err) { renderWheel(); dragTip(evt, ev.title, err); return; }
   }
   const before = tg.o ? occRange(ev, tg.o) : range(ev), after = dragRange(tg, nd);
@@ -2904,7 +2927,7 @@ function reviewAction(act) {
   else if (act === 'do-move') {
     const ev = state.wheel.events.find(e => e.id === it.id), span = ev.kind === 'span';
     const s = $('#rvStart').value, e = span ? $('#rvEnd').value : '';
-    if (!isDate(s) || (span && (!isDate(e) || e < s))) { $('#rvErr').textContent = !isDate(s) ? t('errStart') : t('errEnd'); return; }
+    if (!isDate(s) || (span && (!isDate(e) || e < s))) { $('#rvErr').textContent = !isDate(s) ? t('errStart') : !isDate(e) ? t('errEnd') : t('errEndBefore', { start: fmtDate(s), end: fmtDate(e) }); return; }
     const reason = reasonOk();
     if (reason === null) return;
     if (it.occ) {
